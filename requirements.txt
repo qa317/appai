@@ -1,1 +1,5 @@
+streamlit
+pandas
+pandasai
 openai
+google-generativeai
