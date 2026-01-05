@@ -1,20 +1,36 @@
+import streamlit as st
 import pandas as pd
 from pandasai import SmartDataframe
-from pandasai.llm import OpenAI
+from pandasai.llm import OpenAI, Gemini
 
-# Create the DataFrame
+st.set_page_config(page_title="PandasAI Summary", layout="centered")
+st.title("📊 PandasAI DataFrame Summary")
+
+# ---- Choose LLM ----
+llm_choice = st.selectbox(
+    "Choose LLM",
+    ["OpenAI", "Gemini (Google)"]
+)
+
+if llm_choice == "OpenAI":
+    llm = OpenAI(api_token=st.secrets["OPENAI_API_KEY"])
+else:
+    llm = Gemini(api_key=st.secrets["GEMINI_API_KEY"])
+
+# ---- Test DataFrame ----
 df = pd.DataFrame({
     "Province": ["Bamyan", "Jawzjan", "Kabul", "Kapisa"],
     "Status": ["Ongoing", "Ongoing", "Ongoing", "Completed"]
 })
 
-# Configure LLM (example: OpenAI)
-llm = OpenAI(api_token="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")
+st.subheader("Input Data")
+st.dataframe(df)
 
-# Wrap DataFrame with PandasAI
+# ---- PandasAI ----
 sdf = SmartDataframe(df, config={"llm": llm})
 
-# Ask PandasAI to summarize
-summary = sdf.chat("Summarize this dataframe")
-
-print(summary)
+if st.button("Summarize Data"):
+    with st.spinner("Generating summary..."):
+        summary = sdf.chat("Summarize this dataframe")
+    st.success("Summary")
+    st.write(summary)
