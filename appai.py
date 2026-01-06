@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+import folium
+from folium.plugins import MarkerCluster
+from streamlit_folium import st_folium
+import math
 
 # --- Your data ---
 df = pd.DataFrame({
@@ -11,7 +14,7 @@ df = pd.DataFrame({
     "aa": ["a"] * 9
 })
 
-# --- Province centroids (approx; tweak if you want) ---
+# --- Province centroids (approx) ---
 province_centroids = {
     "Badakhshan": (36.7, 70.8),
     "Badghis": (35.2, 63.8),
@@ -26,51 +29,56 @@ province_centroids = {
 # --- Count occurrences ---
 counts = df.groupby("province").size().reset_index(name="count")
 
-# Map lat/lon
+# Add lat/lon
 counts["lat"] = counts["province"].map(lambda p: province_centroids.get(p, (None, None))[0])
 counts["lon"] = counts["province"].map(lambda p: province_centroids.get(p, (None, None))[1])
 counts = counts.dropna(subset=["lat", "lon"])
 
-st.title("Province Counts Map")
+st.title("Province Bubble Map (Leaflet/Folium)")
 
-# --- Controls ---
-zoom = st.slider("Zoom", min_value=4.0, max_value=9.0, value=5.5, step=0.5)
-show_labels = st.toggle("Show count labels", value=True)
+use_cluster = st.toggle("Use clustering (better when zoomed out)", value=True)
 
-# Simple rule: only show text if zoom is high enough (and toggle is on)
-enable_text = show_labels and zoom >= 6.5
+# --- Create map ---
+center_lat, center_lon = 34.5, 66.0  # Afghanistan-ish center
+m = folium.Map(location=[center_lat, center_lon], zoom_start=6, tiles="CartoDB positron")
 
-# --- Fancy map ---
-fig = px.scatter_mapbox(
-    counts,
-    lat="lat",
-    lon="lon",
-    size="count",
-    color="count",
-    hover_name="province",
-    hover_data={"count": True, "lat": False, "lon": False},
-    zoom=zoom,
-    height=650,
-    mapbox_style="open-street-map",  # no token needed
-)
-
-# Add text labels
-if enable_text:
-    fig.update_traces(
-        text=counts["count"].astype(str),
-        textposition="top center",
-        mode="markers+text"
-    )
+layer = MarkerCluster() if use_cluster else folium.FeatureGroup(name="Bubbles")
+if use_cluster:
+    m.add_child(layer)
 else:
-    fig.update_traces(mode="markers")
+    m.add_child(layer)
 
-# Make it prettier
-fig.update_layout(
-    margin=dict(l=0, r=0, t=40, b=0),
-    title=dict(text="Counts by Province", x=0.02),
-)
+def radius_from_count(c: int) -> int:
+    # Smooth scaling that feels nice
+    return int(10 + 10 * math.sqrt(c))
 
-# Bubble sizing nicer
-fig.update_traces(marker=dict(sizemode="area", sizemin=8))
+for _, row in counts.iterrows():
+    prov = row["province"]
+    c = int(row["count"])
+    lat, lon = float(row["lat"]), float(row["lon"])
 
-st.plotly_chart(fig, use_container_width=True)
+    r = radius_from_count(c)
+
+    # Bubble with count label inside (DivIcon)
+    html = f"""
+    <div style="
+        width:{r*2}px; height:{r*2}px;
+        border-radius:50%;
+        background: rgba(255, 140, 0, 0.35);
+        border: 2px solid rgba(255, 140, 0, 0.85);
+        display:flex; align-items:center; justify-content:center;
+        font-weight:700; font-size:{max(12, r//2)}px;
+        color: rgba(60, 35, 0, 0.95);
+        ">
+        {c}
+    </div>
+    """
+
+    folium.Marker(
+        location=[lat, lon],
+        icon=folium.DivIcon(html=html),
+        tooltip=f"{prov}: {c}",
+    ).add_to(layer)
+
+# Render in Streamlit
+st_folium(m, width=None, height=650)
