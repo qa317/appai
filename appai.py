@@ -4,7 +4,7 @@ import folium
 from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 import math
-
+st.set_page_config(layout="wide")
 # --- Your data ---
 df = pd.DataFrame({
     "province": [
