@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import folium
-from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 import math
 
@@ -15,7 +14,7 @@ df = pd.DataFrame({
 })
 
 # --- Province centroids (approx) ---
-province_centroids = {
+centroids = {
     "Badakhshan": (36.7, 70.8),
     "Badghis": (35.2, 63.8),
     "Balkh": (36.7, 67.1),
@@ -28,57 +27,28 @@ province_centroids = {
 
 # --- Count occurrences ---
 counts = df.groupby("province").size().reset_index(name="count")
+counts["lat"] = counts["province"].map(lambda p: centroids[p][0])
+counts["lon"] = counts["province"].map(lambda p: centroids[p][1])
 
-# Add lat/lon
-counts["lat"] = counts["province"].map(lambda p: province_centroids.get(p, (None, None))[0])
-counts["lon"] = counts["province"].map(lambda p: province_centroids.get(p, (None, None))[1])
-counts = counts.dropna(subset=["lat", "lon"])
+# --- Pretty base map ---
+m = folium.Map(location=[34.5, 66.0], zoom_start=6, tiles="CartoDB positron")
 
-st.title("Province Bubble Map (Leaflet/Folium)")
+# Smooth, nice sizing
+def bubble_radius(c):
+    return 6 + 6 * math.sqrt(c)
 
-use_cluster = st.toggle("Use clustering (better when zoomed out)", value=True)
+for _, r in counts.iterrows():
+    prov, c, lat, lon = r["province"], int(r["count"]), r["lat"], r["lon"]
 
-# --- Create map ---
-center_lat, center_lon = 34.5, 66.0  # Afghanistan-ish center
-m = folium.Map(location=[center_lat, center_lon], zoom_start=6, tiles="CartoDB positron")
-
-layer = MarkerCluster() if use_cluster else folium.FeatureGroup(name="Bubbles")
-if use_cluster:
-    m.add_child(layer)
-else:
-    m.add_child(layer)
-
-def radius_from_count(c: int) -> int:
-    # Smooth scaling that feels nice
-    return int(10 + 10 * math.sqrt(c))
-
-for _, row in counts.iterrows():
-    prov = row["province"]
-    c = int(row["count"])
-    lat, lon = float(row["lat"]), float(row["lon"])
-
-    r = radius_from_count(c)
-
-    # Bubble with count label inside (DivIcon)
-    html = f"""
-    <div style="
-        width:{r*2}px; height:{r*2}px;
-        border-radius:50%;
-        background: rgba(255, 140, 0, 0.35);
-        border: 2px solid rgba(255, 140, 0, 0.85);
-        display:flex; align-items:center; justify-content:center;
-        font-weight:700; font-size:{max(12, r//2)}px;
-        color: rgba(60, 35, 0, 0.95);
-        ">
-        {c}
-    </div>
-    """
-
-    folium.Marker(
+    folium.CircleMarker(
         location=[lat, lon],
-        icon=folium.DivIcon(html=html),
+        radius=bubble_radius(c),
+        weight=2,
+        color="#ff8c00",
+        fill=True,
+        fill_color="#ff8c00",
+        fill_opacity=0.35,
         tooltip=f"{prov}: {c}",
-    ).add_to(layer)
+    ).add_to(m)
 
-# Render in Streamlit
-st_folium(m, width=None, height=650)
+st_folium(m, height=650, use_container_width=True)
