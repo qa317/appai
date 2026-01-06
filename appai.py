@@ -1,36 +1,36 @@
-import streamlit as st
 import pandas as pd
-from pandasai import SmartDataframe
-from pandasai.llm import OpenAI, Gemini
+import plotly.express as px
+import streamlit as st
 
-st.set_page_config(page_title="PandasAI Summary", layout="centered")
-st.title("📊 PandasAI DataFrame Summary")
+# Province centroids (approx)
+province_centroids = {
+    "Badakhshan": (36.7, 70.8),
+    "Badghis": (35.2, 63.8),
+    "Balkh": (36.7, 67.1),
+    "Daykundi": (33.7, 66.0),
+    "Kandahar": (31.6, 65.7),
+    "Kapisa": (34.9, 69.6),
+    "Laghman": (34.7, 70.2),
+    "Logar": (34.0, 69.2),
+}
 
-# ---- Choose LLM ----
-llm_choice = st.selectbox(
-    "Choose LLM",
-    ["OpenAI", "Gemini (Google)"]
+df_counts = (
+    df.groupby("province")
+      .size()
+      .reset_index(name="count")
 )
 
-if llm_choice == "OpenAI":
-    llm = OpenAI(api_token=st.secrets["OPENAI_API_KEY"])
-else:
-    llm = Gemini(api_key=st.secrets["GEMINI_API_KEY"])
+df_counts["lat"] = df_counts["province"].map(lambda x: province_centroids[x][0])
+df_counts["lon"] = df_counts["province"].map(lambda x: province_centroids[x][1])
 
-# ---- Test DataFrame ----
-df = pd.DataFrame({
-    "Province": ["Bamyan", "Jawzjan", "Kabul", "Kapisa"],
-    "Status": ["Ongoing", "Ongoing", "Ongoing", "Completed"]
-})
+fig = px.scatter_mapbox(
+    df_counts,
+    lat="lat",
+    lon="lon",
+    size="count",
+    color="count",
+    zoom=5,
+    mapbox_style="open-street-map",
+)
 
-st.subheader("Input Data")
-st.dataframe(df)
-
-# ---- PandasAI ----
-sdf = SmartDataframe(df, config={"llm": llm})
-
-if st.button("Summarize Data"):
-    with st.spinner("Generating summary..."):
-        summary = sdf.chat("Summarize this dataframe")
-    st.success("Summary")
-    st.write(summary)
+st.plotly_chart(fig, use_container_width=True)
