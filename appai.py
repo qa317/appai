@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import folium
+from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 import math
 
@@ -30,25 +31,40 @@ counts = df.groupby("province").size().reset_index(name="count")
 counts["lat"] = counts["province"].map(lambda p: centroids[p][0])
 counts["lon"] = counts["province"].map(lambda p: centroids[p][1])
 
-# --- Pretty base map ---
+# --- Map (nice tiles) ---
 m = folium.Map(location=[34.5, 66.0], zoom_start=6, tiles="CartoDB positron")
 
-# Smooth, nice sizing
-def bubble_radius(c):
-    return 6 + 6 * math.sqrt(c)
+# --- Cluster layer ---
+cluster = MarkerCluster(disableClusteringAtZoom=8)  # stops clustering when zoomed in enough
+m.add_child(cluster)
+
+def bubble_size(c: int) -> int:
+    # bubble diameter in pixels (nice scaling)
+    return int(26 + 10 * math.sqrt(c))
 
 for _, r in counts.iterrows():
     prov, c, lat, lon = r["province"], int(r["count"]), r["lat"], r["lon"]
+    d = bubble_size(c)
+    font = max(12, d // 3)
 
-    folium.CircleMarker(
+    html = f"""
+    <div style="
+        width:{d}px; height:{d}px;
+        border-radius:50%;
+        background: rgba(255,140,0,0.35);
+        border: 2px solid rgba(255,140,0,0.9);
+        display:flex; align-items:center; justify-content:center;
+        font-weight:700; font-size:{font}px;
+        color: rgba(60,35,0,0.95);
+        ">
+        {c}
+    </div>
+    """
+
+    folium.Marker(
         location=[lat, lon],
-        radius=bubble_radius(c),
-        weight=2,
-        color="#ff8c00",
-        fill=True,
-        fill_color="#ff8c00",
-        fill_opacity=0.35,
+        icon=folium.DivIcon(html=html),
         tooltip=f"{prov}: {c}",
-    ).add_to(m)
+    ).add_to(cluster)
 
 st_folium(m, height=650, use_container_width=True)
