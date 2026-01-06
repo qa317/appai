@@ -5,15 +5,16 @@ from folium.plugins import MarkerCluster
 from streamlit_folium import st_folium
 import math
 
-# --- Data ---
+# --- Your data ---
 df = pd.DataFrame({
     "province": [
         "Badakhshan", "Badghis", "Balkh", "Daykundi",
         "Kandahar", "Kapisa", "Laghman", "Logar", "Logar"
-    ]
+    ],
+    "aa": ["a"] * 9
 })
 
-# --- Province centroids ---
+# --- Province centroids (approx) ---
 centroids = {
     "Badakhshan": (36.7, 70.8),
     "Badghis": (35.2, 63.8),
@@ -25,67 +26,45 @@ centroids = {
     "Logar": (34.0, 69.2),
 }
 
+# --- Count occurrences ---
 counts = df.groupby("province").size().reset_index(name="count")
 counts["lat"] = counts["province"].map(lambda p: centroids[p][0])
 counts["lon"] = counts["province"].map(lambda p: centroids[p][1])
 
-# --- Map ---
+# --- Map (nice tiles) ---
 m = folium.Map(location=[34.5, 66.0], zoom_start=6, tiles="CartoDB positron")
 
-# --- Beautiful cluster style ---
-cluster = MarkerCluster(
-    disableClusteringAtZoom=8,
-    icon_create_function="""
-    function(cluster) {
-        var count = cluster.getChildCount();
-        var size = Math.max(30, Math.min(60, 20 + Math.sqrt(count)*12));
-        return new L.DivIcon({
-            html: `<div style="
-                width:${size}px;height:${size}px;
-                border-radius:50%;
-                background:rgba(255,140,0,0.35);
-                border:2px solid rgba(255,140,0,0.9);
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-weight:700;
-                color:#3c2300;
-                font-size:${size/3}px;
-            ">${count}</div>`
-        });
-    }
-    """
-)
-
+# --- Cluster layer ---
+cluster = MarkerCluster(disableClusteringAtZoom=8)  # stops clustering when zoomed in enough
 m.add_child(cluster)
 
-def bubble_diameter(c):
+def bubble_size(c: int) -> int:
+    # bubble diameter in pixels (nice scaling)
     return int(26 + 10 * math.sqrt(c))
 
-# --- Markers ---
 for _, r in counts.iterrows():
-    d = bubble_diameter(r["count"])
+    prov, c, lat, lon = r["province"], int(r["count"]), r["lat"], r["lon"]
+    d = bubble_size(c)
     font = max(12, d // 3)
 
     html = f"""
     <div style="
-        width:{d}px;height:{d}px;
+        width:{d}px; height:{d}px;
         border-radius:50%;
-        background:rgba(255,140,0,0.35);
-        border:2px solid rgba(255,140,0,0.9);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-weight:700;
-        font-size:{font}px;
-        color:#3c2300;
-    ">{r['count']}</div>
+        background: rgba(255,140,0,0.35);
+        border: 2px solid rgba(255,140,0,0.9);
+        display:flex; align-items:center; justify-content:center;
+        font-weight:700; font-size:{font}px;
+        color: rgba(60,35,0,0.95);
+        ">
+        {c}
+    </div>
     """
 
     folium.Marker(
-        location=[r["lat"], r["lon"]],
+        location=[lat, lon],
         icon=folium.DivIcon(html=html),
-        tooltip=f"{r['province']}: {r['count']}"
+        tooltip=f"{prov}: {c}",
     ).add_to(cluster)
 
 st_folium(m, height=650, use_container_width=True)
