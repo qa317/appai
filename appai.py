@@ -13,7 +13,13 @@ province_centroids = {
     "Laghman": (34.7, 70.2),
     "Logar": (34.0, 69.2),
 }
-
+df = pd.DataFrame({
+    "province": [
+        "Badakhshan", "Badghis", "Balkh", "Daykundi",
+        "Kandahar", "Kapisa", "Laghman", "Logar", "Logar"
+    ],
+    "aa": ["a"] * 9
+})
 df_counts = (
     df.groupby("province")
       .size()
