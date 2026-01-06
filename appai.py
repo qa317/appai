@@ -67,4 +67,4 @@ for _, r in counts.iterrows():
         tooltip=f"{prov}: {c}",
     ).add_to(cluster)
 
-st_folium(m, height=650, use_container_width=True)
+st_folium(m, height=6000, use_container_width=False)
