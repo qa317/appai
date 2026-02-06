@@ -1,40 +1,67 @@
 import streamlit as st
 import pandas as pd
-from pandas_ai import PandasAI
-from pandas_ai.llms.openai import OpenAI
+import google.generativeai as genai
+import os
 
-# ——— Set up the LLM ———
-llm = OpenAI()
+st.set_page_config(page_title="Gemini + DataFrame Q&A", layout="centered")
 
-# ——— App Title ———
-st.title("📊 Pandas AI + Streamlit Explorer")
+st.title("📊 Ask Questions About a DataFrame (Gemini)")
 
-st.markdown("""
-Upload a CSV file, explore the data, and ask questions in natural language!
-""")
+# ----------------------------
+# Sample DataFrame (VERY SMALL)
+# ----------------------------
+df = pd.DataFrame({
+    "Name": ["Alice", "Bob", "Charlie", "Diana"],
+    "Age": [23, 30, 35, 28],
+    "Department": ["HR", "Engineering", "Sales", "Engineering"],
+    "Salary": [50000, 80000, 60000, 75000]
+})
 
-# ——— File Upload ———
-uploaded_file = st.file_uploader("Upload your CSV", type=["csv"])
+st.subheader("Sample Data")
+st.dataframe(df, use_container_width=True)
 
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
+# ----------------------------
+# Gemini setup
+# ----------------------------
+api_key = os.getenv("GEMINI_API_KEY")
 
-    st.write("### 📋 Data Preview")
-    st.dataframe(df)
+if not api_key:
+    st.warning("Please set GEMINI_API_KEY in Streamlit secrets or environment variables.")
+    st.stop()
 
-    st.write("### Ask a question about the data")
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
-    user_question = st.text_input("Type your question here:")
+# ----------------------------
+# Question input
+# ----------------------------
+st.subheader("Ask a question about the data")
 
-    if user_question:
-        with st.spinner("Analyzing with Pandas AI..."):
-            pandas_ai = PandasAI(llm)
-            try:
-                answer = pandas_ai.run(df, prompt=user_question)
-                st.write("### 🧠 Answer:")
-                st.write(answer)
-            except Exception as e:
-                st.error(f"Oops, something went wrong: {e}")
+question = st.text_input(
+    "Example: Who earns the highest salary? or What is the average age?"
+)
 
-else:
-    st.write("Upload a CSV file to begin!")
+if st.button("Ask Gemini"):
+    if not question.strip():
+        st.error("Please enter a question.")
+    else:
+        # Convert DF to text for Gemini
+        df_text = df.to_csv(index=False)
+
+        prompt = f"""
+You are a data analyst.
+Answer the user's question using ONLY the data below.
+If the answer cannot be found in the data, say "The data does not contain this information."
+
+Data:
+{df_text}
+
+Question:
+{question}
+"""
+
+        with st.spinner("Thinking..."):
+            response = model.generate_content(prompt)
+
+        st.subheader("Answer")
+        st.write(response.text)
