@@ -6,16 +6,16 @@ st.set_page_config(page_title="Gemini + DF Q&A", layout="centered")
 st.title("📊 Gemini Q&A on a tiny DataFrame")
 
 # 1) Tiny sample DataFrame
-# df = pd.DataFrame(
-#     {
-#         "Name": ["Alice", "Bob", "Charlie", "Diana"],
-#         "Age": [23, 30, 35, 28],
-#         "Department": ["HR", "Engineering", "Sales", "Engineering"],
-#         "Salary": [50000, 80000, 60000, 75000],
-#     }
-# )
+df = pd.DataFrame(
+    {
+        "Name": ["Alice", "Bob", "Charlie", "Diana"],
+        "Age": [23, 30, 35, 28],
+        "Department": ["HR", "Engineering", "Sales", "Engineering"],
+        "Salary": [50000, 80000, 60000, 75000],
+    }
+)
 
-df=pd.read_csv("HER Rev -Raw - Sheet1.csv")
+
 
 st.subheader("Data")
 st.dataframe(df, use_container_width=True)
