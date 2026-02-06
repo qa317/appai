@@ -23,7 +23,7 @@ st.dataframe(df, use_container_width=True)
 # ----------------------------
 # Gemini setup
 # ----------------------------
-api_key = os.getenv("GEMINI_API_KEY")
+api_key = st.secrets["GEMINI_API_KEY"]
 
 if not api_key:
     st.warning("Please set GEMINI_API_KEY in Streamlit secrets or environment variables.")
