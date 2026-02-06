@@ -1,80 +1,75 @@
 import streamlit as st
 import pandas as pd
-from openai import OpenAI
+import requests
 
-st.set_page_config(page_title="Kimi + DF Q&A", layout="centered")
-st.title("📊 Ask Questions About a DataFrame (Kimi / Moonshot)")
+st.set_page_config(page_title="Hugging Face + DF Q&A", layout="centered")
+st.title("📊 Ask Questions About a DataFrame (Hugging Face API)")
 
-# 1) Tiny sample DataFrame
-df = pd.DataFrame(
-    {
-        "Name": ["Alice", "Bob", "Charlie", "Diana"],
-        "Age": [23, 30, 35, 28],
-        "Department": ["HR", "Engineering", "Sales", "Engineering"],
-        "Salary": [50000, 80000, 60000, 75000],
-    }
-)
+# Sample DataFrame
+df = pd.DataFrame({
+    "Name": ["Alice", "Bob", "Charlie", "Diana"],
+    "Age": [23, 30, 35, 28],
+    "Department": ["HR", "Engineering", "Sales", "Engineering"],
+    "Salary": [50000, 80000, 60000, 75000],
+})
 
 st.subheader("Sample Data")
 st.dataframe(df, use_container_width=True)
 
-# 2) Secrets: API key + optional base URL + optional model
-# Streamlit Cloud -> Settings -> Secrets:
-# MOONSHOT_API_KEY = "sk-..."
-# (optional) MOONSHOT_BASE_URL = "https://api.moonshot.cn/v1"  or "https://api.moonshot.ai/v1"
-# (optional) MOONSHOT_MODEL = "kimi-k2-0711-preview"
-if "MOONSHOT_API_KEY" not in st.secrets:
-    st.error('Missing secret: MOONSHOT_API_KEY (add it in Streamlit "Secrets").')
+# API key from secrets
+if "HF_API_TOKEN" not in st.secrets:
+    st.error('Add HF_API_TOKEN in Streamlit secrets.')
     st.stop()
 
-base_url = st.secrets.get("MOONSHOT_BASE_URL", "https://api.moonshot.ai/v1")
-default_model = st.secrets.get("MOONSHOT_MODEL", "kimi-k2-0711-preview")
+HF_API_TOKEN = st.secrets["HF_API_TOKEN"]
 
-client = OpenAI(api_key=st.secrets["MOONSHOT_API_KEY"], base_url=base_url)
-
-# 3) Simple UI
 st.subheader("Ask a question about the data")
 question = st.text_input("Example: Who has the highest salary?")
 
-# Let you override model from UI (in case your account has different model IDs)
-model = st.text_input("Model name", value=default_model)
+# Choose model (many free models work)
+model = st.selectbox(
+    "Model",
+    ["tiiuae/falcon-7b-instruct", "google/flan-t5-xl", "databricks/dolly-v2-12b"],
+    index=0
+)
 
-def ask_kimi(q: str) -> str:
-    df_text = df.to_csv(index=False)
+def call_hf_inference(prompt: str, model_name: str) -> str:
+    url = f"https://api-inference.huggingface.co/models/{model_name}"
+    headers = {
+        "Authorization": f"Bearer {HF_API_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    payload = {"inputs": prompt, "options": {"wait_for_model": True}}
 
-    system_msg = (
-        "You are a data analyst. Answer the user's question using ONLY the data provided. "
-        'If the answer cannot be found in the data, say: "The data does not contain this information."'
-    )
+    r = requests.post(url, headers=headers, json=payload, timeout=60)
+    r.raise_for_status()
+    data = r.json()
 
-    user_msg = f"DATA (CSV):\n{df_text}\n\nQUESTION:\n{q}"
+    # The structure differs by model — many return text directly
+    if isinstance(data, dict) and "error" in data:
+        return f"Error: {data['error']}"
 
-    resp = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_msg},
-            {"role": "user", "content": user_msg},
-        ],
-        temperature=0.2,
-    )
-    return resp.choices[0].message.content
+    # Some outputs are lists
+    if isinstance(data, list) and len(data) > 0:
+        # For most HF GOV models
+        return data[0].get("generated_text", str(data[0]))
 
-if st.button("Ask Kimi"):
+    return str(data)
+
+if st.button("Ask HF"):
     if not question.strip():
         st.warning("Type a question first.")
     else:
-        try:
-            with st.spinner("Thinking..."):
-                answer = ask_kimi(question)
-            st.subheader("Answer")
-            st.write(answer)
-        except Exception as e:
-            st.error(
-                "Kimi API call failed.\n\n"
-                f"Base URL: {base_url}\n"
-                f"Model: {model}\n\n"
-                f"Error: {e}"
-            )
-            st.info(
-                "Tip: If it says 'model not found', change the model name to one enabled in your Moonshot console."
-            )
+        df_text = df.to_csv(index=False)
+        prompt = (
+            "You are a data analyst. Answer using ONLY the data below. "
+            'If you cannot find the answer, respond: "The data does not contain this information."\n\n'
+            f"Data (CSV):\n{df_text}\n\nQUESTION:\n{question}"
+        )
+        with st.spinner("Thinking..."):
+            try:
+                answer = call_hf_inference(prompt, model)
+                st.subheader("Answer")
+                st.write(answer)
+            except Exception as e:
+                st.error(f"Hugging Face API error: {e}")
