@@ -1,3 +1,2 @@
 pandas
-pandasai
-openai
+google-generativeai
