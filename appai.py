@@ -1,9 +1,9 @@
 import streamlit as st
 import pandas as pd
-import requests
+from openai import OpenAI
 
-st.set_page_config(page_title="DeepSeek + DF Q&A", layout="centered")
-st.title("📊 Ask Questions About a DataFrame (DeepSeek)")
+st.set_page_config(page_title="Kimi + DF Q&A", layout="centered")
+st.title("📊 Ask Questions About a DataFrame (Kimi / Moonshot)")
 
 # 1) Tiny sample DataFrame
 df = pd.DataFrame(
@@ -18,28 +18,28 @@ df = pd.DataFrame(
 st.subheader("Sample Data")
 st.dataframe(df, use_container_width=True)
 
-# 2) Read API key from Streamlit secrets
-# In Streamlit Cloud -> Settings -> Secrets:
-# DEEPSEEK_API_KEY = "..."
-if "DEEPSEEK_API_KEY" not in st.secrets:
-    st.error('Missing secret: DEEPSEEK_API_KEY (add it in Streamlit "Secrets").')
+# 2) Secrets: API key + optional base URL + optional model
+# Streamlit Cloud -> Settings -> Secrets:
+# MOONSHOT_API_KEY = "sk-..."
+# (optional) MOONSHOT_BASE_URL = "https://api.moonshot.cn/v1"  or "https://api.moonshot.ai/v1"
+# (optional) MOONSHOT_MODEL = "kimi-k2-0711-preview"
+if "MOONSHOT_API_KEY" not in st.secrets:
+    st.error('Missing secret: MOONSHOT_API_KEY (add it in Streamlit "Secrets").')
     st.stop()
 
-DEEPSEEK_API_KEY = st.secrets["DEEPSEEK_API_KEY"]
+base_url = st.secrets.get("MOONSHOT_BASE_URL", "https://api.moonshot.ai/v1")
+default_model = st.secrets.get("MOONSHOT_MODEL", "kimi-k2-0711-preview")
 
-# 3) UI input
+client = OpenAI(api_key=st.secrets["MOONSHOT_API_KEY"], base_url=base_url)
+
+# 3) Simple UI
 st.subheader("Ask a question about the data")
 question = st.text_input("Example: Who has the highest salary?")
 
-# Optional: choose model (simple)
-model = st.selectbox(
-    "Model",
-    ["deepseek-chat", "deepseek-reasoner"],
-    index=0,
-    help="deepseek-chat is general chat; deepseek-reasoner is reasoning-focused."
-)
+# Let you override model from UI (in case your account has different model IDs)
+model = st.text_input("Model name", value=default_model)
 
-def ask_deepseek(df: pd.DataFrame, q: str, model_name: str) -> str:
+def ask_kimi(q: str) -> str:
     df_text = df.to_csv(index=False)
 
     system_msg = (
@@ -49,37 +49,32 @@ def ask_deepseek(df: pd.DataFrame, q: str, model_name: str) -> str:
 
     user_msg = f"DATA (CSV):\n{df_text}\n\nQUESTION:\n{q}"
 
-    url = "https://api.deepseek.com/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": model_name,
-        "messages": [
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg},
         ],
-        "temperature": 0.2,
-    }
+        temperature=0.2,
+    )
+    return resp.choices[0].message.content
 
-    r = requests.post(url, headers=headers, json=payload, timeout=60)
-    r.raise_for_status()
-    data = r.json()
-
-    # DeepSeek returns OpenAI-style choices/message
-    return data["choices"][0]["message"]["content"]
-
-if st.button("Ask DeepSeek"):
+if st.button("Ask Kimi"):
     if not question.strip():
         st.warning("Type a question first.")
     else:
         try:
             with st.spinner("Thinking..."):
-                answer = ask_deepseek(df, question, model)
+                answer = ask_kimi(question)
             st.subheader("Answer")
             st.write(answer)
-        except requests.HTTPError as e:
-            st.error(f"DeepSeek API error: {e}\n\nResponse: {e.response.text if e.response is not None else ''}")
         except Exception as e:
-            st.error(f"Unexpected error: {e}")
+            st.error(
+                "Kimi API call failed.\n\n"
+                f"Base URL: {base_url}\n"
+                f"Model: {model}\n\n"
+                f"Error: {e}"
+            )
+            st.info(
+                "Tip: If it says 'model not found', change the model name to one enabled in your Moonshot console."
+            )
