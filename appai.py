@@ -1,31 +1,29 @@
 import streamlit as st
 
-st.set_page_config(page_title="Audio Player", page_icon="🎵")
+st.set_page_config(page_title="NEDA Audio Player", page_icon="🎧")
 
-st.title("Public Audio Player")
+st.title("NEDA Audio Player")
 
+# Integer input from 1 to 100
 audio_number = st.number_input(
-    "Choose an audio number",
+    "Select audio number",
     min_value=1,
     max_value=100,
-    value=1,
     step=1,
+    value=1
 )
 
-# Assumes the files are named like:
-# https://e-didier.fr/code/neda101.mp3
-# https://e-didier.fr/code/neda102.mp3
-# ...
-# https://e-didier.fr/code/neda10100.mp3
-audio_url = f"https://e-didier.fr/code/neda10{audio_number}.mp3"
+# Build the URL
+audio_url = f"https://e-didier.fr/code/neda10{audio_number}"
 
-st.write("Audio URL:")
-st.code(audio_url)
+st.write("Audio link:")
+st.write(audio_url)
 
+# Play the audio
 st.audio(audio_url)
 
-st.link_button("Open audio in browser", audio_url)
-
+# Optional: open original page
+st.link_button("Open original page", audio_url)
 
 # import streamlit as st
 # import pandas as pd
