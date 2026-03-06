@@ -1,29 +1,31 @@
 import streamlit as st
 
-st.set_page_config(page_title="NEDA Audio Player", page_icon="🎧")
+st.set_page_config(page_title="Edito A1 Audio Player", page_icon="🎧")
 
-st.title("NEDA Audio Player")
+st.title("🎧 Edito A1 Audio Player")
 
-# Integer input from 1 to 100
+# Audio number input
 audio_number = st.number_input(
-    "Select audio number",
+    "Choose audio number",
     min_value=1,
     max_value=100,
-    step=1,
-    value=1
+    value=1,
+    step=1
 )
 
-# Build the URL
-audio_url = f"https://e-didier.fr/code/neda10{audio_number}"
+# Compute folder number
+folder_number = 40991 + audio_number
 
-st.write("Audio link:")
-st.write(audio_url)
+# Build URL
+audio_url = f"https://e-didier.fr/datas/{folder_number}/{audio_number}_Edito_A1_Livre.mp3"
 
-# Play the audio
+st.write("Audio URL:")
+st.code(audio_url)
+
+# Play audio
 st.audio(audio_url)
 
-# Optional: open original page
-st.link_button("Open original page", audio_url)
+st.link_button("Open audio in browser", audio_url)
 
 # import streamlit as st
 # import pandas as pd
