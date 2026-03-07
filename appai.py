@@ -19,7 +19,7 @@ folder_number = 40991 + audio_number
 audio_str = f"{audio_number:02d}"
 
 # # build URL
-# audio_url = f"https://e-didier.fr/datas/{folder_number}/{audio_str}_Edito_A1_Livre.mp3"
+audio_url = f"https://e-didier.fr/datas/{folder_number}/{audio_str}_Edito_A1_Livre.mp3"
 
 # st.write("Audio URL:")
 # st.code(audio_url)
