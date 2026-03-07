@@ -18,11 +18,11 @@ folder_number = 40991 + audio_number
 # format number with two digits
 audio_str = f"{audio_number:02d}"
 
-# build URL
-audio_url = f"https://e-didier.fr/datas/{folder_number}/{audio_str}_Edito_A1_Livre.mp3"
+# # build URL
+# audio_url = f"https://e-didier.fr/datas/{folder_number}/{audio_str}_Edito_A1_Livre.mp3"
 
-st.write("Audio URL:")
-st.code(audio_url)
+# st.write("Audio URL:")
+# st.code(audio_url)
 
 st.audio(audio_url)
 
