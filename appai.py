@@ -7,7 +7,7 @@ st.title("🎧 Edito A1 Audio Player")
 audio_number = st.number_input(
     "Choose audio number",
     min_value=1,
-    max_value=100,
+    max_value=200,
     value=1,
     step=1
 )
