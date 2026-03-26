@@ -11,7 +11,8 @@ from streamlit_folium import st_folium
 import copy
 import re
 import numpy as np
-from streamlit_extras.dataframe_explorer import dataframe_explorer
+from st_aggrid import AgGrid, GridOptionsBuilder
+
 
 st.set_page_config(layout="wide")
 
@@ -1077,19 +1078,45 @@ if st.session_state.logged_in:
             "<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>",
             unsafe_allow_html=True,
         )
+    
         total_target = tari.groupby(disag2).size()
         received_data = tari[tari["QA_Status"].isin(qastatus)].groupby(disag2).size()
+    
         summary = pd.DataFrame(
             {"Total_Target": total_target, "Received_Data": received_data}
         ).fillna(0).astype(int).reset_index()
-        summary["Remaining"] = summary["Total_Target"] - summary["Received_Data"]
-        summary["Completed ✅"] = (
-            summary["Received_Data"] == summary["Total_Target"]
-        ).apply(lambda x: "✅" if x else "❌")
     
-        filtered_df = dataframe_explorer(summary, case=False)
-        st.dataframe(filtered_df, use_container_width=True, hide_index=True)
-
+        summary["Remaining"] = summary["Total_Target"] - summary["Received_Data"]
+        summary["Completed ✅"] = summary.apply(
+            lambda row: "✅" if row["Received_Data"] == row["Total_Target"] else "❌",
+            axis=1,
+        )
+    
+        # Build AgGrid options
+        gb = GridOptionsBuilder.from_dataframe(summary)
+    
+        gb.configure_default_column(
+            filter=True,
+            sortable=True,
+            resizable=True,
+        )
+    
+        gb.configure_column(disag2, filter="agTextColumnFilter")
+        gb.configure_column("Total_Target", filter="agNumberColumnFilter")
+        gb.configure_column("Received_Data", filter="agNumberColumnFilter")
+        gb.configure_column("Remaining", filter="agNumberColumnFilter")
+        gb.configure_column("Completed ✅", filter="agSetColumnFilter")
+    
+        grid_options = gb.build()
+    
+        AgGrid(
+            summary,
+            gridOptions=grid_options,
+            use_container_width=True,
+            height=350,
+            fit_columns_on_grid_load=True,
+            theme="streamlit",
+        )
     if 'tall2' in locals():
         disag_raw=st.multiselect('Tryouts Summary (Phone Surveys):', tall2.columns.tolist(),def_var2,help='This is intended for phone surveys and other surveys where multiple attempts to reach respondents may be necessary.!')#,default=['Date')
         if disag_raw:
