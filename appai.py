@@ -1098,7 +1098,6 @@ if st.session_state.logged_in:
             AgGrid(
                 summary,
                 gridOptions=grid_options,
-                height=400,
                 fit_columns_on_grid_load=True,
                 update_mode="NO_UPDATE",  # ← key: no rerun on filter/sort
             )
