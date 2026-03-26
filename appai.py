@@ -1056,28 +1056,31 @@ if st.session_state.logged_in:
     )    
 
 
-  disag=st.multiselect('Create Dataset Summary:', tall.columns.tolist(),default=def_var1,help='This option is used to create summaries based on selected columns.!')#,default=['Date')
-  if disag:
+    
+    disag = st.multiselect('Create Dataset Summary:', tall.columns.tolist(), default=def_var1,
+                           help='This option is used to create summaries based on selected columns.!')  # ,default=['Date')
+    if disag:
       st.markdown(f"<h2 style='color:#000000; font-size: 16px;'>Summary:</h2>", unsafe_allow_html=True)
       if len(disag) == 1:
-          disag_t=tall.groupby(disag).size().reset_index().rename(columns={0:'N'})
-          disag_t.loc[len(disag_t)] = ['Total', disag_t['N'].sum()]
+        disag_t = tall.groupby(disag).size().reset_index().rename(columns={0: 'N'})
+        disag_t.loc[len(disag_t)] = ['Total', disag_t['N'].sum()]
       else:
-          disag_t = tall.groupby(disag).size().unstack(disag[-1],fill_value=0).reset_index()
-          disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
+        disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
+        disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
       st.dataframe(disag_t)
-      
-  disag2=st.multiselect('Create Sample Summary:', tari.columns.tolist(),def_var0,help='This option is used to create summaries based on selected columns.!')#,default=['Date')
-  if disag2:
-    st.markdown(f"<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>", unsafe_allow_html=True)
-    total_target = tari.groupby(disag2).size()
-    received_data = tari[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
-    summary = pd.DataFrame({'Total_Target': total_target,'Received_Data': received_data}).fillna(0).astype(int)
-    summary['Remaining']=summary['Total_Target']-summary['Received_Data']
-    summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
-    summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
-    st.data_editor(summary)
-    
+  
+    disag2 = st.multiselect('Create Sample Summary:', tari.columns.tolist(), def_var0,
+                            help='This option is used to create summaries based on selected columns.!')  # ,default=['Date')
+    if disag2:
+      st.markdown(f"<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>", unsafe_allow_html=True)
+      total_target = tari.groupby(disag2).size()
+      received_data = tari[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
+      summary = pd.DataFrame({'Total_Target': total_target, 'Received_Data': received_data}).fillna(0).astype(int)
+      summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
+      summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
+      summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
+      st.data_editor(summary)
+  
 
 
     if 'tall2' in locals():
