@@ -1065,7 +1065,21 @@ if st.session_state.logged_in:
         summary['Remaining']=summary['Total_Target']-summary['Received_Data']
         summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
         summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
-        st.dataframe(summary)
+        fig = go.Figure(data=[go.Table(
+            header=dict(
+                values=list(summary.columns),
+                fill_color='paleturquoise',
+                align='left'
+            ),
+            cells=dict(
+                values=[summary[col] for col in summary.columns],
+                fill_color='lavender',
+                align='left'
+            )
+        )])
+        
+        # Display in Streamlit
+        st.plotly_chart(fig)
         
     with col4:
       disag=st.multiselect('Create Dataset Summary:', tall.columns.tolist(),default=def_var1,help='This option is used to create summaries based on selected columns.!')#,default=['Date')
