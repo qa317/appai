@@ -1081,7 +1081,7 @@ if st.session_state.logged_in:
         received_data = tari[tari["QA_Status"].isin(qastatus)].groupby(disag2).size()
         summary = pd.DataFrame(
             {"Total_Target": total_target, "Received_Data": received_data}
-        ).fillna(0).astype(int)
+        ).fillna(0).astype(int).reset_index()
         summary["Remaining"] = summary["Total_Target"] - summary["Received_Data"]
         summary["Completed ✅"] = (
             summary["Received_Data"] == summary["Total_Target"]
