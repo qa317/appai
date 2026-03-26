@@ -1067,17 +1067,6 @@ if st.session_state.logged_in:
         summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
         summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
         @st.cache_data
-        def get_summary():
-            # simulate heavy computation
-            df = pd.DataFrame({
-                "Name": ["Alice", "Bob", "Charlie", "David"],
-                "Age": [25, 30, 35, 40],
-                "City": ["New York", "Los Angeles", "Chicago", "Houston"]
-            })
-            return df
-        
-        summary = get_summary()  # cached, won't recompute on rerun
-        
         # Build grid options
         gb = GridOptionsBuilder.from_dataframe(summary)
         gb.configure_default_column(filterable=True, sortable=True, editable=False)
