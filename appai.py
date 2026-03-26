@@ -1092,14 +1092,15 @@ if st.session_state.logged_in:
     
             gb = GridOptionsBuilder.from_dataframe(summary)
             gb.configure_default_column(filterable=True)
-            gb.configure_grid_options(domLayout="normal")
+            gb.configure_grid_options(domLayout='autoHeight')
             grid_options = gb.build()
-    
+            
             AgGrid(
                 summary,
                 gridOptions=grid_options,
                 fit_columns_on_grid_load=True,
-                update_mode="NO_UPDATE",  # ← key: no rerun on filter/sort
+                update_mode="NO_UPDATE",
+                height=None,  # let autoHeight take over
             )
     
     show_grid()
