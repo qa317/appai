@@ -11,7 +11,7 @@ from streamlit_folium import st_folium
 import copy
 import re
 import numpy as np
-from st_aggrid import AgGrid, GridOptionsBuilder
+from streamlit_extras.dataframe_explorer import dataframe_explorer
 
 st.set_page_config(layout="wide")
 
@@ -1087,7 +1087,8 @@ if st.session_state.logged_in:
             summary["Received_Data"] == summary["Total_Target"]
         ).apply(lambda x: "✅" if x else "❌")
     
-        st.dataframe(summary, use_container_width=True, hide_index=True)
+        filtered_df = dataframe_explorer(summary, case=False)
+        st.dataframe(filtered_df, use_container_width=True, hide_index=True)
 
     if 'tall2' in locals():
         disag_raw=st.multiselect('Tryouts Summary (Phone Surveys):', tall2.columns.tolist(),def_var2,help='This is intended for phone surveys and other surveys where multiple attempts to reach respondents may be necessary.!')#,default=['Date')
