@@ -1072,7 +1072,6 @@ if st.session_state.logged_in:
   
     disag2 = st.multiselect('Create Sample Summary:', tari.columns.tolist(), def_var0,
                             help='This option is used to create summaries based on selected columns.!')  # ,default=['Date')
-
     if disag2:
         st.markdown(
             "<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>",
@@ -1098,9 +1097,12 @@ if st.session_state.logged_in:
             gridOptions=grid_options,
             fit_columns_on_grid_load=True,
             update_mode="NO_UPDATE",
-            height=None,
+            allow_unsafe_jscode=True,
+            custom_css={
+                "#gridToolBar": {"padding-bottom": "0px !important"},
+                ".ag-root-wrapper": {"min-height": "200px"},
+            },
         )
-
 
     if 'tall2' in locals():
         disag_raw=st.multiselect('Tryouts Summary (Phone Surveys):', tall2.columns.tolist(),def_var2,help='This is intended for phone surveys and other surveys where multiple attempts to reach respondents may be necessary.!')#,default=['Date')
