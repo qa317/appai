@@ -1,4 +1,4 @@
-streamlit>=1.35.0
+streamlit
 pandas
 requests
 gspread
@@ -6,4 +6,4 @@ plotly
 folium
 streamlit_folium
 numpy
-streamlit-aggrid
+streamlit-extras
