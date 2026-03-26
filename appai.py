@@ -1076,8 +1076,11 @@ if st.session_state.logged_in:
 
     @st.cache_data
     def build_summary(tari, qastatus, group_cols):
-        total_target = tari.groupby(group_cols).size()
-        received_data = tari[tari["QA_Status"].isin(qastatus)].groupby(group_cols).size()
+        # Use string for one column, list for multiple columns
+        groupby_key = group_cols[0] if len(group_cols) == 1 else group_cols
+    
+        total_target = tari.groupby(groupby_key).size()
+        received_data = tari[tari["QA_Status"].isin(qastatus)].groupby(groupby_key).size()
     
         summary = pd.DataFrame({
             "Total_Target": total_target,
@@ -1100,7 +1103,7 @@ if st.session_state.logged_in:
             unsafe_allow_html=True,
         )
     
-        summary = build_summary(tari, qastatus, tuple(group_cols))
+        summary = build_summary(tari, tuple(qastatus), group_cols)
     
         gb = GridOptionsBuilder.from_dataframe(summary)
         gb.configure_default_column(filter=True, sortable=True, resizable=True)
@@ -1108,10 +1111,10 @@ if st.session_state.logged_in:
         AgGrid(
             summary,
             gridOptions=gb.build(),
-            update_mode="NO_UPDATE",
             use_container_width=True,
             height=350,
             theme="streamlit",
+            update_mode="NO_UPDATE",
         )
 
     if 'tall2' in locals():
