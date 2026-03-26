@@ -1084,7 +1084,7 @@ if st.session_state.logged_in:
         grid_response = AgGrid(
             summary,
             gridOptions=gridOptions,
-            update_mode=GridUpdateMode.NO_UPDATE,  # Prevent rerun on each change
+            update_mode=NO_UPDATE,  # Prevent rerun on each change
             enable_enterprise_modules=False,
             height=300,
             fit_columns_on_grid_load=True
