@@ -1088,7 +1088,7 @@ if st.session_state.logged_in:
         ).apply(lambda x: "✅" if x else "❌")
     
         gb = GridOptionsBuilder.from_dataframe(summary)
-        gb.configure_default_column(filterable=True)
+        gb.configure_default_column(filterable=True, filter="agSetColumnFilter")
         gb.configure_grid_options(domLayout="autoHeight")
         grid_options = gb.build()
     
@@ -1097,11 +1097,6 @@ if st.session_state.logged_in:
             gridOptions=grid_options,
             fit_columns_on_grid_load=True,
             update_mode="NO_UPDATE",
-            allow_unsafe_jscode=True,
-            custom_css={
-                "#gridToolBar": {"padding-bottom": "0px !important"},
-                ".ag-root-wrapper": {"min-height": "200px"},
-            },
         )
 
     if 'tall2' in locals():
