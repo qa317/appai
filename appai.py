@@ -1072,19 +1072,38 @@ if st.session_state.logged_in:
   
     disag2 = st.multiselect('Create Sample Summary:', tari.columns.tolist(), def_var0,
                             help='This option is used to create summaries based on selected columns.!')  # ,default=['Date')
-    if disag2:
-      st.markdown(f"<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>", unsafe_allow_html=True)
-      total_target = tari.groupby(disag2).size()
-      received_data = tari[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
-      summary = pd.DataFrame({'Total_Target': total_target, 'Received_Data': received_data}).fillna(0).astype(int)
-      summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
-      summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
-      summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
-      gb = GridOptionsBuilder.from_dataframe(summary)
-      gb.configure_default_column(filterable=True)  # enables filter on every column
-      gb.configure_grid_options(domLayout='normal')
-      grid_options = gb.build()
-      AgGrid(summary, gridOptions=grid_options, height=400, fit_columns_on_grid_load=True)
+
+    @st.fragment
+    def show_grid():
+        if disag2:
+            st.markdown(
+                "<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>",
+                unsafe_allow_html=True,
+            )
+            total_target = tari.groupby(disag2).size()
+            received_data = tari[tari["QA_Status"].isin(qastatus)].groupby(disag2).size()
+            summary = pd.DataFrame(
+                {"Total_Target": total_target, "Received_Data": received_data}
+            ).fillna(0).astype(int)
+            summary["Remaining"] = summary["Total_Target"] - summary["Received_Data"]
+            summary["Completed ✅"] = (
+                summary["Received_Data"] == summary["Total_Target"]
+            ).apply(lambda x: "✅" if x else "❌")
+    
+            gb = GridOptionsBuilder.from_dataframe(summary)
+            gb.configure_default_column(filterable=True)
+            gb.configure_grid_options(domLayout="normal")
+            grid_options = gb.build()
+    
+            AgGrid(
+                summary,
+                gridOptions=grid_options,
+                height=400,
+                fit_columns_on_grid_load=True,
+                update_mode="NO_UPDATE",  # ← key: no rerun on filter/sort
+            )
+    
+    show_grid()
   
 
 
