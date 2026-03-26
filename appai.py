@@ -1074,47 +1074,44 @@ if st.session_state.logged_in:
     disag2 = st.multiselect('Create Sample Summary:', tari.columns.tolist(), def_var0,
                             help='This option is used to create summaries based on selected columns.!')  # ,default=['Date')
     if disag2:
+        # Make sure group_cols is always a list
+        group_cols = disag2 if isinstance(disag2, list) else [disag2]
+    
         st.markdown(
             "<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>",
             unsafe_allow_html=True,
         )
     
-        total_target = tari.groupby(disag2).size()
-        received_data = tari[tari["QA_Status"].isin(qastatus)].groupby(disag2).size()
+        total_target = tari.groupby(group_cols).size()
+        received_data = tari[tari["QA_Status"].isin(qastatus)].groupby(group_cols).size()
     
-        summary = pd.DataFrame(
-            {"Total_Target": total_target, "Received_Data": received_data}
-        ).fillna(0).astype(int).reset_index()
+        summary = pd.DataFrame({
+            "Total_Target": total_target,
+            "Received_Data": received_data
+        }).fillna(0).astype(int).reset_index()
     
         summary["Remaining"] = summary["Total_Target"] - summary["Received_Data"]
         summary["Completed ✅"] = summary.apply(
             lambda row: "✅" if row["Received_Data"] == row["Total_Target"] else "❌",
-            axis=1,
+            axis=1
         )
     
-        # Build AgGrid options
         gb = GridOptionsBuilder.from_dataframe(summary)
+        gb.configure_default_column(filter=True, sortable=True, resizable=True)
     
-        gb.configure_default_column(
-            filter=True,
-            sortable=True,
-            resizable=True,
-        )
+        for col in group_cols:
+            gb.configure_column(col, filter="agTextColumnFilter")
     
-        gb.configure_column(disag2, filter="agTextColumnFilter")
         gb.configure_column("Total_Target", filter="agNumberColumnFilter")
         gb.configure_column("Received_Data", filter="agNumberColumnFilter")
         gb.configure_column("Remaining", filter="agNumberColumnFilter")
         gb.configure_column("Completed ✅", filter="agSetColumnFilter")
     
-        grid_options = gb.build()
-    
         AgGrid(
             summary,
-            gridOptions=grid_options,
+            gridOptions=gb.build(),
             use_container_width=True,
             height=350,
-            fit_columns_on_grid_load=True,
             theme="streamlit",
         )
     if 'tall2' in locals():
