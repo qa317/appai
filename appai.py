@@ -10,6 +10,7 @@ from streamlit_folium import st_folium
 import copy
 import re
 import numpy as np
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 st.set_page_config(layout="wide")
 
@@ -1065,21 +1066,33 @@ if st.session_state.logged_in:
         summary['Remaining']=summary['Total_Target']-summary['Received_Data']
         summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
         summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
-        fig = go.Figure(data=[go.Table(
-            header=dict(
-                values=list(summary.columns),
-                fill_color='paleturquoise',
-                align='left'
-            ),
-            cells=dict(
-                values=[summary[col] for col in summary.columns],
-                fill_color='lavender',
-                align='left'
-            )
-        )])
+        gb = GridOptionsBuilder.from_dataframe(summary)
+        gb.configure_default_column(
+            filterable=True,  # Enable filter for all columns
+            sortable=True,
+            editable=False
+        )
         
-        # Display in Streamlit
-        st.plotly_chart(fig)
+        # Explicitly enable text filter for non-numeric columns
+        for col, dtype in summary.dtypes.items():
+            if dtype == "object":
+                gb.configure_column(col, filter="agTextColumnFilter")
+        
+        gridOptions = gb.build()
+        
+        # Display interactive table without rerunning on each filter change
+        grid_response = AgGrid(
+            summary,
+            gridOptions=gridOptions,
+            update_mode=GridUpdateMode.NO_UPDATE,  # Prevent rerun on each change
+            enable_enterprise_modules=False,
+            height=300,
+            fit_columns_on_grid_load=True
+        )
+        
+        # If you want filtered data after user interacts:
+        filtered_data = grid_response['data']
+        st.write("Filtered DataFrame:", filtered_data)
         
     with col4:
       disag=st.multiselect('Create Dataset Summary:', tall.columns.tolist(),default=def_var1,help='This option is used to create summaries based on selected columns.!')#,default=['Date')
