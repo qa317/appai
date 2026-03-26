@@ -6,3 +6,4 @@ plotly
 folium
 streamlit_folium
 numpy
+streamlit-aggrid
