@@ -1079,7 +1079,11 @@ if st.session_state.logged_in:
       summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
       summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
       summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
-      st.data_editor(summary)
+      gb = GridOptionsBuilder.from_dataframe(summary)
+      gb.configure_default_column(filterable=True)  # enables filter on every column
+      gb.configure_grid_options(domLayout='normal')
+      grid_options = gb.build()
+      AgGrid(summary, gridOptions=grid_options, height=400, fit_columns_on_grid_load=True)
   
 
 
