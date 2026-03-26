@@ -1066,31 +1066,38 @@ if st.session_state.logged_in:
         summary['Remaining']=summary['Total_Target']-summary['Received_Data']
         summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
         summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
-        gb = GridOptionsBuilder.from_dataframe(summary)
-        gb.configure_default_column(
-            filterable=True,  # Enable filter for all columns
-            sortable=True,
-            editable=False
-        )
+        @st.cache_data
+        def get_summary():
+            # simulate heavy computation
+            df = pd.DataFrame({
+                "Name": ["Alice", "Bob", "Charlie", "David"],
+                "Age": [25, 30, 35, 40],
+                "City": ["New York", "Los Angeles", "Chicago", "Houston"]
+            })
+            return df
         
-        # Explicitly enable text filter for non-numeric columns
+        summary = get_summary()  # cached, won't recompute on rerun
+        
+        # Build grid options
+        gb = GridOptionsBuilder.from_dataframe(summary)
+        gb.configure_default_column(filterable=True, sortable=True, editable=False)
+        
         for col, dtype in summary.dtypes.items():
             if dtype == "object":
                 gb.configure_column(col, filter="agTextColumnFilter")
         
         gridOptions = gb.build()
         
-        # Display interactive table without rerunning on each filter change
+        # Display table
         grid_response = AgGrid(
             summary,
             gridOptions=gridOptions,
-            update_mode=NO_UPDATE,  # Prevent rerun on each change
+            update_mode=GridUpdateMode.NO_UPDATE,
             enable_enterprise_modules=False,
             height=300,
             fit_columns_on_grid_load=True
         )
         
-        # If you want filtered data after user interacts:
         filtered_data = grid_response['data']
         st.write("Filtered DataFrame:", filtered_data)
         
