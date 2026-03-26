@@ -1,4 +1,3 @@
-
 import streamlit as st
 import folium
 import pandas as pd
@@ -11,8 +10,6 @@ from streamlit_folium import st_folium
 import copy
 import re
 import numpy as np
-from st_aggrid import AgGrid, GridOptionsBuilder
-
 
 st.set_page_config(layout="wide")
 
@@ -1056,66 +1053,34 @@ if st.session_state.logged_in:
         'Please note: summaries include both "Complete" and "Incomplete" submissions by default; '
         'for accurate sample tracking and analysis, select only "Complete" submissions in the filters above.'
     )    
+    col3, col4 = st.columns(2)
+        
+    with col3:
+      disag2=st.multiselect('Create Sample Summary:', tari.columns.tolist(),def_var0,help='This option is used to create summaries based on selected columns.!')#,default=['Date')
+      if disag2:
+        st.markdown(f"<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>", unsafe_allow_html=True)
+        total_target = tari.groupby(disag2).size()
+        received_data = tari[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
+        summary = pd.DataFrame({'Total_Target': total_target,'Received_Data': received_data}).fillna(0).astype(int)
+        summary['Remaining']=summary['Total_Target']-summary['Received_Data']
+        summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
+        summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
+        st.dataframe(summary)
+        
+    with col4:
+      disag=st.multiselect('Create Dataset Summary:', tall.columns.tolist(),default=def_var1,help='This option is used to create summaries based on selected columns.!')#,default=['Date')
+      if disag:
+          st.markdown(f"<h2 style='color:#000000; font-size: 16px;'>Summary:</h2>", unsafe_allow_html=True)
+          if len(disag) == 1:
+              disag_t=tall.groupby(disag).size().reset_index().rename(columns={0:'N'})
+              disag_t.loc[len(disag_t)] = ['Total', disag_t['N'].sum()]
+          else:
+              disag_t = tall.groupby(disag).size().unstack(disag[-1],fill_value=0).reset_index()
+              disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
+      
+          
+          st.dataframe(disag_t)
 
-
-    
-    disag = st.multiselect('Create Dataset Summary:', tall.columns.tolist(), default=def_var1,
-                           help='This option is used to create summaries based on selected columns.!')  # ,default=['Date')
-    if disag:
-      st.markdown(f"<h2 style='color:#000000; font-size: 16px;'>Summary:</h2>", unsafe_allow_html=True)
-      if len(disag) == 1:
-        disag_t = tall.groupby(disag).size().reset_index().rename(columns={0: 'N'})
-        disag_t.loc[len(disag_t)] = ['Total', disag_t['N'].sum()]
-      else:
-        disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
-        disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
-      st.dataframe(disag_t)
-  
-    disag2 = st.multiselect('Create Sample Summary:', tari.columns.tolist(), def_var0,
-                            help='This option is used to create summaries based on selected columns.!')  # ,default=['Date')
-
-    @st.cache_data
-    def build_summary(tari, qastatus, group_cols):
-        # Use string for one column, list for multiple columns
-        groupby_key = group_cols[0] if len(group_cols) == 1 else group_cols
-    
-        total_target = tari.groupby(groupby_key).size()
-        received_data = tari[tari["QA_Status"].isin(qastatus)].groupby(groupby_key).size()
-    
-        summary = pd.DataFrame({
-            "Total_Target": total_target,
-            "Received_Data": received_data
-        }).fillna(0).astype(int).reset_index()
-    
-        summary["Remaining"] = summary["Total_Target"] - summary["Received_Data"]
-        summary["Completed ✅"] = (
-            summary["Received_Data"] == summary["Total_Target"]
-        ).map({True: "✅", False: "❌"})
-    
-        return summary
-    
-    
-    if disag2:
-        group_cols = disag2 if isinstance(disag2, list) else [disag2]
-    
-        st.markdown(
-            "<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>",
-            unsafe_allow_html=True,
-        )
-    
-        summary = build_summary(tari, tuple(qastatus), group_cols)
-    
-        gb = GridOptionsBuilder.from_dataframe(summary)
-        gb.configure_default_column(filter=True, sortable=True, resizable=True)
-    
-        AgGrid(
-            summary,
-            gridOptions=gb.build(),
-            use_container_width=True,
-            height=350,
-            theme="streamlit",
-            update_mode="NO_UPDATE",
-        )
 
     if 'tall2' in locals():
         disag_raw=st.multiselect('Tryouts Summary (Phone Surveys):', tall2.columns.tolist(),def_var2,help='This is intended for phone surveys and other surveys where multiple attempts to reach respondents may be necessary.!')#,default=['Date')
@@ -1689,3 +1654,53 @@ if st.session_state.logged_in:
   if st.button("Logout"):
         st.session_state.logged_in = False
         st.rerun()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
