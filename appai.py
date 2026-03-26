@@ -1062,7 +1062,7 @@ if st.session_state.logged_in:
         st.markdown(f"<h2 style='color:#000000; font-size: 16px;'>DC Progress Summary:</h2>", unsafe_allow_html=True)
         total_target = tari.groupby(disag2).size()
         received_data = tari[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
-        summary = pd.DataFrame({'Total_Target': total_target,'Received_Data': received_data}).fillna(0).astype(int)
+        summary = pd.DataFrame({'Total_Target': total_target,'Received_Data': received_data}).fillna(0).astype(int).reset_index()
         summary['Remaining']=summary['Total_Target']-summary['Received_Data']
         summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
         summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
