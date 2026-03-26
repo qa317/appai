@@ -1087,17 +1087,7 @@ if st.session_state.logged_in:
             summary["Received_Data"] == summary["Total_Target"]
         ).apply(lambda x: "✅" if x else "❌")
     
-        gb = GridOptionsBuilder.from_dataframe(summary)
-        gb.configure_default_column(filterable=True, filter="agSetColumnFilter")
-        gb.configure_grid_options(domLayout="autoHeight")
-        grid_options = gb.build()
-    
-        AgGrid(
-            summary,
-            gridOptions=grid_options,
-            fit_columns_on_grid_load=True,
-            update_mode="NO_UPDATE",
-        )
+        st.dataframe(summary, use_container_width=True, hide_index=True)
 
     if 'tall2' in locals():
         disag_raw=st.multiselect('Tryouts Summary (Phone Surveys):', tall2.columns.tolist(),def_var2,help='This is intended for phone surveys and other surveys where multiple attempts to reach respondents may be necessary.!')#,default=['Date')
