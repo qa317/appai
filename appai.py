@@ -1076,7 +1076,7 @@ if st.session_state.logged_in:
     summary['Remaining']=summary['Total_Target']-summary['Received_Data']
     summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
     summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
-    st.dataframe(summary, use_container_width=True)
+    st.data_editor(summary)
     
 
 
