@@ -907,28 +907,8 @@ if st.session_state.logged_in:
     data_metrics['Completed ✅'] = data_metrics['Target'] == data_metrics['Approved data']
     data_metrics['Completed ✅'] = data_metrics['Completed ✅'].apply(lambda x: '✅' if x else '❌')
 
-    # ─── AgGrid for Sample Tracking table ───
-    gb = GridOptionsBuilder.from_dataframe(data_metrics)
-    gb.configure_default_column(
-        filterable=True,
-        sortable=True,
-        resizable=True,
-        wrapHeaderText=True,
-        autoHeaderHeight=True,
-    )
-    gb.configure_column("Tool", pinned="left")
-    gb.configure_grid_options(domLayout='autoHeight')
-    grid_options = gb.build()
-
-    AgGrid(
-        data_metrics,
-        gridOptions=grid_options,
-        fit_columns_on_grid_load=True,
-        theme='streamlit',
-        update_mode=GridUpdateMode.NO_UPDATE,
-        allow_unsafe_jscode=False,
-        key="sample_tracking_grid",
-    )
+    # Show it in Streamlit
+    st.dataframe(data_metrics,hide_index=True)
     
     # Create data for the first doughnut chart
     labels1 = ['Received', 'Remaining']
@@ -1052,7 +1032,27 @@ if st.session_state.logged_in:
         summary['Remaining']=summary['Total_Target']-summary['Received_Data']
         summary['Completed ✅'] = summary['Received_Data'] == summary['Total_Target']
         summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
-        st.dataframe(summary)
+        # ─── AgGrid for DC Progress Summary ───
+        summary_display = summary.reset_index()
+        gb = GridOptionsBuilder.from_dataframe(summary_display)
+        gb.configure_default_column(
+            filterable=True,
+            sortable=True,
+            resizable=True,
+            wrapHeaderText=True,
+            autoHeaderHeight=True,
+        )
+        gb.configure_grid_options(domLayout='autoHeight')
+        grid_options = gb.build()
+        AgGrid(
+            summary_display,
+            gridOptions=grid_options,
+            fit_columns_on_grid_load=True,
+            theme='streamlit',
+            update_mode=GridUpdateMode.NO_UPDATE,
+            allow_unsafe_jscode=False,
+            key="dc_progress_summary_grid",
+        )
         
     with col4:
       disag=st.multiselect('Create Dataset Summary:', tall.columns.tolist(),default=def_var1,help='This option is used to create summaries based on selected columns.!')#,default=['Date')
