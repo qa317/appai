@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 import streamlit.components.v1 as components
 from streamlit_folium import st_folium
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+from streamlit-aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import copy
 import re
 import numpy as np
