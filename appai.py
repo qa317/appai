@@ -7,7 +7,15 @@ import json
 from datetime import datetime
 import streamlit.components.v1 as components
 from streamlit_folium import st_folium
-from streamlit-aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+try:
+    from st_aggrid import AgGrid, GridOptionsBuilder
+    HAS_AGGRID = True
+except ImportError:
+    try:
+        from streamlit_aggrid import AgGrid, GridOptionsBuilder
+        HAS_AGGRID = True
+    except ImportError:
+        HAS_AGGRID = False
 import copy
 import re
 import numpy as np
@@ -1034,25 +1042,28 @@ if st.session_state.logged_in:
         summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
         # ─── AgGrid for DC Progress Summary ───
         summary_display = summary.reset_index()
-        gb = GridOptionsBuilder.from_dataframe(summary_display)
-        gb.configure_default_column(
-            filterable=True,
-            sortable=True,
-            resizable=True,
-            wrapHeaderText=True,
-            autoHeaderHeight=True,
-        )
-        gb.configure_grid_options(domLayout='autoHeight')
-        grid_options = gb.build()
-        AgGrid(
-            summary_display,
-            gridOptions=grid_options,
-            fit_columns_on_grid_load=True,
-            theme='streamlit',
-            update_mode=GridUpdateMode.NO_UPDATE,
-            allow_unsafe_jscode=False,
-            key="dc_progress_summary_grid",
-        )
+        # Ensure all column names are strings for AgGrid compatibility
+        summary_display.columns = [str(c) for c in summary_display.columns]
+        if HAS_AGGRID:
+            try:
+                gb = GridOptionsBuilder.from_dataframe(summary_display)
+                gb.configure_default_column(
+                    filterable=True,
+                    sortable=True,
+                    resizable=True,
+                )
+                grid_options = gb.build()
+                grid_options['domLayout'] = 'autoHeight'
+                AgGrid(
+                    summary_display,
+                    gridOptions=grid_options,
+                    height=min(400, 35 * (len(summary_display) + 1) + 40),
+                    key="dc_progress_summary_grid",
+                )
+            except Exception:
+                st.dataframe(summary_display, hide_index=True)
+        else:
+            st.dataframe(summary_display, hide_index=True)
         
     with col4:
       disag=st.multiselect('Create Dataset Summary:', tall.columns.tolist(),default=def_var1,help='This option is used to create summaries based on selected columns.!')#,default=['Date')
