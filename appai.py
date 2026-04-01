@@ -8,11 +8,11 @@ from datetime import datetime
 import streamlit.components.v1 as components
 from streamlit_folium import st_folium
 try:
-    from st_aggrid import AgGrid, GridOptionsBuilder
+    from st_aggrid import AgGrid, GridOptionsBuilder, AgGridTheme
     HAS_AGGRID = True
 except ImportError:
     try:
-        from streamlit_aggrid import AgGrid, GridOptionsBuilder
+        from streamlit_aggrid import AgGrid, GridOptionsBuilder, AgGridTheme
         HAS_AGGRID = True
     except ImportError:
         HAS_AGGRID = False
@@ -1042,25 +1042,25 @@ if st.session_state.logged_in:
         summary['Completed ✅'] = summary['Completed ✅'].apply(lambda x: '✅' if x else '❌')
         # ─── AgGrid for DC Progress Summary ───
         summary_display = summary.reset_index()
-        # Ensure all column names are strings for AgGrid compatibility
         summary_display.columns = [str(c) for c in summary_display.columns]
         if HAS_AGGRID:
             try:
                 gb = GridOptionsBuilder.from_dataframe(summary_display)
                 gb.configure_default_column(
-                    filterable=True,
+                    filter=True,
                     sortable=True,
                     resizable=True,
                 )
                 grid_options = gb.build()
-                grid_options['domLayout'] = 'autoHeight'
                 AgGrid(
                     summary_display,
                     gridOptions=grid_options,
-                    height=min(400, 35 * (len(summary_display) + 1) + 40),
+                    height=min(400, 36 * (len(summary_display) + 1) + 50),
+                    theme=AgGridTheme.STREAMLIT,
                     key="dc_progress_summary_grid",
                 )
-            except Exception:
+            except Exception as e:
+                st.warning(f"AgGrid failed: {e}")
                 st.dataframe(summary_display, hide_index=True)
         else:
             st.dataframe(summary_display, hide_index=True)
