@@ -536,7 +536,14 @@ if st.session_state.logged_in:
         def make_donut(labels, values, title, colors, note=""):
             pct = round(100 * values[0] / sum(values)) if sum(values) else 0
             fig_d = go.Figure(go.Pie(labels=labels, values=values, hole=0.8, textinfo="percent", textfont=dict(size=10, color="#4a5675"), marker=dict(colors=colors, line=dict(color='#0a0e1a', width=3)), pull=[0.03]+[0]*(len(values)-1), hovertemplate="<b>%{label}</b>: %{percent}<extra></extra>", showlegend=True, sort=False))
-            fig_d.update_layout(title=dict(text=title, x=0.5, xanchor="center", font=dict(size=12, color="#e8edf5", family="Outfit")), height=260, **PLOT_LAYOUT, margin=dict(l=0,r=0,t=40,b=0), legend=dict(orientation="h", y=-0.08, x=0.5, xanchor="center", font=dict(size=10, color="#4a5675")), annotations=[dict(text=f"<b style='font-size:26px;color:#e8edf5;font-family:Space Mono'>{pct}%</b><br><span style='font-size:10px;color:#4a5675'>{note}</span>", x=0.5, y=0.5, showarrow=False)])
+            fig_d.update_layout(
+                title=dict(text=title, x=0.5, xanchor="center", font=dict(size=12, color="#e8edf5", family="Outfit")),
+                height=260,
+                **PLOT_LAYOUT,
+                legend=dict(orientation="h", y=-0.08, x=0.5, xanchor="center", font=dict(size=10, color="#4a5675")),
+                annotations=[dict(text=f"<b style='font-size:26px;color:#e8edf5;font-family:Space Mono'>{pct}%</b><br><span style='font-size:10px;color:#4a5675'>{note}</span>", x=0.5, y=0.5, showarrow=False)]
+            )
+            fig_d.update_layout(margin=dict(l=0, r=0, t=40, b=0))
             return fig_d
 
         has_both = all(s in completion for s in status_options)
