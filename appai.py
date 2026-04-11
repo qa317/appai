@@ -307,7 +307,8 @@ if st.session_state.logged_in:
     fig.update_yaxes(tickmode="array", tickvals=y_vals, ticktext=y_labels, autorange="reversed", title="", tickfont=dict(size=11, color="#7a8baa"), gridcolor="rgba(255,255,255,0.02)")
     max_date = max(project_data[pe_c].max() if pe_c in project_data.columns else pd.Timestamp.today() for _, _, pe_c, _, _ in PHASES)
     fig.update_xaxes(range=[project_data[[ps_c for _, ps_c, _, _, _ in PHASES if ps_c in project_data.columns]].min().min(), max_date + pd.Timedelta(days=20)], showgrid=True, gridcolor="rgba(255,255,255,0.03)", zeroline=False, tickfont=dict(color="#4a5675"))
-    fig.update_layout(height=max(380, 20 * len(y_vals)), **PLOT_LAYOUT, margin=dict(l=95, r=80, t=20, b=10))
+    fig.update_layout(height=max(380, 20 * len(y_vals)), **PLOT_LAYOUT)
+    fig.update_layout(margin=dict(l=95, r=80, t=20, b=10))
     st.plotly_chart(fig, use_container_width=True)
 
     # ── SUB-PROJECT ──
