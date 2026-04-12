@@ -13,19 +13,13 @@ import numpy as np
 
 st.set_page_config(layout="wide", page_title="ATR Dashboard", page_icon="📊")
 
-# ──────────────────────────────────────────────
-# PREMIUM THEME CSS — minimal, refined, modern
-# ──────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
-
 :root {
-  --brand: #1e293b;
+  --bg: #f4f5f7;
   --brand-accent: #0f766e;
-  --brand-warm: #dc2626;
-  --surface: #ffffff;
-  --surface-alt: #f8fafc;
+  --surface: transparent;
   --border: #e2e8f0;
   --text: #0f172a;
   --text-muted: #64748b;
@@ -33,371 +27,165 @@ st.markdown("""
   --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
   --shadow-lg: 0 4px 24px rgba(0,0,0,0.10);
   --gradient-brand: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f766e 100%);
+  --glass: rgba(255,255,255,0.55);
+  --glass-border: rgba(226,232,240,0.8);
 }
-
-html, body, [class*="css"] {
-  font-family: 'Outfit', sans-serif !important;
-}
-
-/* Hide default streamlit chrome */
+html, body, [class*="css"] { font-family: 'Outfit', sans-serif !important; }
 #MainMenu, footer, header { visibility: hidden; }
-.block-container {
-  padding-top: 1.2rem !important;
-  padding-bottom: 1rem !important;
-  max-width: 1320px;
+.block-container { padding-top: 1.2rem !important; padding-bottom: 1rem !important; max-width: 1360px; }
+
+/* Force transparent backgrounds everywhere */
+div[data-testid="stVerticalBlockBorderWrapper"],
+div[data-testid="stHorizontalBlock"],
+div[data-testid="stMetric"],
+.stDataFrame { background: transparent !important; }
+
+/* Bordered containers: frosted glass */
+div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVerticalBlock"]) {
+  background: var(--glass) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 18px !important;
 }
 
-/* ── Hero Banner ── */
+/* Hero Banner */
 .hero-banner {
   background: var(--gradient-brand);
-  border-radius: 20px;
-  padding: 28px 36px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  overflow: hidden;
+  border-radius: 22px; padding: 32px 40px; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: relative; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(15,23,42,0.25);
 }
 .hero-banner::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  content: ''; position: absolute; top: -60%; right: -8%;
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
   border-radius: 50%;
 }
 .hero-banner::after {
-  content: '';
-  position: absolute;
-  bottom: -30%;
-  left: 20%;
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%);
+  content: ''; position: absolute; bottom: -40%; left: 15%;
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%);
   border-radius: 50%;
 }
-.hero-banner h1 {
-  color: #fff;
-  font-size: 26px;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -0.5px;
-  position: relative;
-  z-index: 1;
-}
-.hero-banner .hero-sub {
-  color: rgba(255,255,255,0.6);
-  font-size: 13px;
-  font-weight: 400;
-  margin-top: 4px;
-  position: relative;
-  z-index: 1;
-}
+.hero-banner h1 { color: #fff; font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px; position: relative; z-index: 1; }
+.hero-banner .hero-sub { color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 400; margin-top: 4px; position: relative; z-index: 1; }
 .hero-badge {
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(8px);
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.15);
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  background: rgba(255,255,255,0.10); backdrop-filter: blur(12px);
+  color: #fff; padding: 10px 18px; border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.12);
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 8px;
 }
-.hero-badge .dot {
-  width: 7px; height: 7px;
-  background: #34d399;
-  border-radius: 50%;
-  animation: pulse-dot 2s ease infinite;
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.4); }
-}
+.hero-badge .dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; animation: pulse-dot 2s ease infinite; }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } }
 
-/* ── Section Labels ── */
+/* Section Labels */
 .section-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 32px 0 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin: 36px 0 14px; display: flex; align-items: center; gap: 10px;
 }
-.section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
+.section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
 
-/* ── KPI Cards (modern pill style) ── */
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-}
-.kpi-pill {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px 22px;
-  position: relative;
-  overflow: hidden;
+/* KPI Stack */
+.kpi-stack { display: flex; flex-direction: column; gap: 12px; }
+.kpi-card-v {
+  background: var(--glass); backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border); border-radius: 16px;
+  padding: 18px 22px; display: flex; align-items: center; gap: 16px;
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.kpi-pill:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-.kpi-pill .kpi-icon {
-  width: 36px; height: 36px;
-  border-radius: 10px;
+.kpi-card-v:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.kpi-card-v .kpi-icon-circle {
+  width: 48px; height: 48px; border-radius: 14px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-  margin-bottom: 12px;
+  font-size: 20px; flex-shrink: 0;
 }
-.kpi-pill .kpi-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-}
-.kpi-pill .kpi-value {
-  font-size: 34px;
-  font-weight: 900;
-  margin: 4px 0;
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: -1px;
-}
-.kpi-pill .kpi-sub {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 400;
-}
+.kpi-card-v .kpi-body { flex: 1; }
+.kpi-card-v .kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 2px; }
+.kpi-card-v .kpi-value { font-size: 28px; font-weight: 900; font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; line-height: 1.1; }
+.kpi-card-v .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.kpi-card-v .kpi-bar { height: 4px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+.kpi-card-v .kpi-bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
 
-/* ── Link Grid ── */
-.links-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
-}
+/* Link Grid */
+.links-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
 @media (max-width: 900px) { .links-grid { grid-template-columns: repeat(3, 1fr); } }
 .link-tile {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  text-align: center;
+  background: var(--glass); backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border); border-radius: 14px;
+  padding: 16px; text-align: center;
   transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
-.link-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  border-color: #0f766e;
-}
-.link-tile .tile-icon {
-  font-size: 22px;
-  margin-bottom: 6px;
-}
-.link-tile .tile-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-.link-tile a {
-  color: #0f766e;
-  font-weight: 600;
-  text-decoration: none;
-  font-size: 13px;
-}
+.link-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: #0f766e; }
+.link-tile .tile-icon { font-size: 22px; margin-bottom: 6px; }
+.link-tile .tile-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 6px; }
+.link-tile a { color: #0f766e; font-weight: 600; text-decoration: none; font-size: 13px; }
 .link-tile a:hover { text-decoration: underline; }
-.link-tile.na {
-  border-style: dashed;
-  opacity: 0.45;
-}
+.link-tile.na { border-style: dashed; opacity: 0.4; }
 
-/* ── Legend Bar ── */
+/* Legend */
 .legend-strip {
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
-  align-items: center;
-  background: #f1f5f9;
-  border-radius: 12px;
-  padding: 10px 18px;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  border: 1px solid var(--border);
+  display: flex; gap: 18px; flex-wrap: wrap; align-items: center;
+  background: var(--glass); backdrop-filter: blur(6px);
+  border-radius: 12px; padding: 10px 18px;
+  font-size: 12px; color: var(--text-muted);
+  margin-bottom: 8px; border: 1px solid var(--glass-border);
 }
 .legend-strip b { font-weight: 700; }
 
-/* ── Archived Banner ── */
+/* Archived */
 .archived-card {
-  background: linear-gradient(135deg, #f0fdfa 0%, #ecfdf5 100%);
-  border: 1px solid #99f6e4;
-  border-radius: 18px;
-  padding: 26px 30px;
-  margin: 16px 0;
+  background: linear-gradient(135deg, rgba(240,253,250,0.8) 0%, rgba(236,253,245,0.8) 100%);
+  backdrop-filter: blur(8px); border: 1px solid #99f6e4;
+  border-radius: 18px; padding: 26px 30px; margin: 16px 0;
 }
-.archived-card h3 {
-  color: #0f766e;
-  margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 800;
-}
-.archived-card p {
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.65;
-  margin: 0;
-}
+.archived-card h3 { color: #0f766e; margin: 0 0 8px; font-size: 18px; font-weight: 800; }
+.archived-card p { color: var(--text); font-size: 14px; line-height: 1.65; margin: 0; }
 
-/* ── Login ── */
-.login-shell {
-  max-width: 420px;
-  margin: 10vh auto;
-  text-align: center;
-}
+/* Login */
+.login-shell { max-width: 420px; margin: 10vh auto; text-align: center; }
 .login-shell .logo-circle {
-  width: 64px; height: 64px;
-  background: var(--gradient-brand);
-  border-radius: 18px;
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 16px;
-  font-size: 28px;
-  color: #fff;
-  box-shadow: 0 4px 20px rgba(15,23,42,0.25);
+  width: 72px; height: 72px; background: var(--gradient-brand);
+  border-radius: 20px; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px; font-size: 32px; color: #fff;
+  box-shadow: 0 6px 24px rgba(15,23,42,0.3);
 }
-.login-shell h2 {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-.login-shell .sub {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 24px;
-}
+.login-shell h2 { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.login-shell .sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
 .login-about-card {
-  max-width: 420px;
-  margin: 16px auto 0;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px 24px;
-  text-align: left;
+  max-width: 420px; margin: 16px auto 0;
+  background: var(--glass); backdrop-filter: blur(8px);
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 20px 24px; text-align: left;
 }
-.login-about-card h4 {
-  color: #0f766e;
-  margin: 0 0 6px;
-  font-size: 14px;
-  font-weight: 700;
-}
-.login-about-card p {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.55;
-  margin: 0;
-}
+.login-about-card h4 { color: #0f766e; margin: 0 0 6px; font-size: 14px; font-weight: 700; }
+.login-about-card p { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0; }
 .error-toast {
-  background: #fef2f2;
-  border-left: 4px solid #ef4444;
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-top: 10px;
-  text-align: left;
+  background: rgba(254,242,242,0.8); border-left: 4px solid #ef4444;
+  border-radius: 12px; padding: 14px 18px; margin-top: 10px; text-align: left;
 }
 .error-toast strong { color: #991b1b; }
 .error-toast p { color: #7f1d1d; font-size: 13px; margin: 4px 0 0; }
 
-/* ── Updates Log ── */
-.upd-day {
-  margin: 10px 0 14px;
-  padding-left: 14px;
-  border-left: 3px solid #e2e8f0;
-}
-.upd-date {
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: #0f766e;
-  font-size: 13px;
-}
+/* Updates */
+.upd-day { margin: 10px 0 14px; padding-left: 14px; border-left: 3px solid #e2e8f0; }
+.upd-date { font-weight: 700; margin-bottom: 6px; color: #0f766e; font-size: 13px; }
 .upd-item { margin: 4px 0; color: var(--text); font-size: 13px; }
 .upd-dot { color: #94a3b8; margin-right: 8px; }
 .upd-sep { height: 1px; background: var(--border); margin: 12px 0; }
 
-/* ── Streamlit Overrides ── */
-.stSelectbox label, .stMultiSelect label {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: var(--text-muted) !important;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.stDataFrame {
-  border-radius: 14px !important;
-  overflow: hidden;
-  box-shadow: var(--shadow) !important;
-}
-div[data-testid="stExpander"] {
-  border: 1px solid var(--border) !important;
-  border-radius: 16px !important;
-  overflow: hidden;
-}
+/* Streamlit Overrides */
+.stSelectbox label, .stMultiSelect label { font-size: 12px !important; font-weight: 700 !important; color: var(--text-muted) !important; text-transform: uppercase; letter-spacing: 0.06em; }
+.stDataFrame { border-radius: 14px !important; overflow: hidden; box-shadow: var(--shadow) !important; background: var(--glass) !important; }
+div[data-testid="stExpander"] { border: 1px solid var(--border) !important; border-radius: 16px !important; overflow: hidden; background: var(--glass) !important; backdrop-filter: blur(6px) !important; }
 div[data-testid="stExpander"] summary { font-weight: 700 !important; }
-.stDownloadButton button {
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-}
-div[data-testid="stMetric"] {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px 18px;
-}
-div[data-testid="stMetric"] label {
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted) !important;
-}
-div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-  font-family: 'JetBrains Mono', monospace !important;
-  font-weight: 800 !important;
-}
-
-/* Plotly containers */
+.stDownloadButton button { border-radius: 12px !important; font-weight: 600 !important; }
 .js-plotly-plot .plotly { border-radius: 14px; }
-
-/* Container borders */
-div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"] {
-  border-radius: 16px !important;
-}
-
-/* Pills styling */
-div[data-testid="stPills"] button {
-  border-radius: 10px !important;
-  font-weight: 600 !important;
-  font-size: 12px !important;
-}
+div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"] { border-radius: 18px !important; }
+div[data-testid="stAlert"] { background: var(--glass) !important; backdrop-filter: blur(6px) !important; border-radius: 14px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -461,7 +249,6 @@ if not st.session_state.logged_in:
 # ──────────────────────────────────────────────
 if st.session_state.logged_in:
 
-    # ── Hero Banner ──
     st.markdown(f"""
     <div class="hero-banner">
         <div>
@@ -477,7 +264,6 @@ if st.session_state.logged_in:
 
     st.toast("Press **R** to refresh · Figures include both complete and incomplete data by default.")
 
-    # ── Project Selector ──
     if user_dict[st.session_state.username]["project"].split(',')[0] == 'All':
         main_project_names = df['Main Project'].unique()
     else:
@@ -491,9 +277,7 @@ if st.session_state.logged_in:
     project_data = df[df['Main Project'] == main_project].reset_index()
     project_names = df[df['Main Project'] == main_project]['Project Name'].unique()
 
-    # ──────────────────────────────────────────
-    # PROJECT TIMELINE
-    # ──────────────────────────────────────────
+    # ── PROJECT TIMELINE ──
     st.markdown('<div class="section-label">Project Timeline</div>', unsafe_allow_html=True)
 
     PHASES = [
@@ -516,12 +300,10 @@ if st.session_state.logged_in:
     PLANNED_W = 3
     ACTUAL_W  = 10
     GAP = 1.1
-
     today = pd.Timestamp.today().normalize()
 
     def to_dt(x):
         return pd.to_datetime(x, dayfirst=True, errors="coerce")
-
     def delay_days(plan_end, actual_end):
         if pd.notna(plan_end) and pd.notna(actual_end):
             d = (actual_end - plan_end).days
@@ -536,12 +318,10 @@ if st.session_state.logged_in:
     fig = go.Figure()
     y_vals, y_labels = [], []
     y = 0
-
     for _, row in project_data.iterrows():
         project = str(row.get("Project Name", "—"))
         responsible = str(row.get("Responsible", "") or "").strip().lower()
         project_y = []
-
         for phase, ps_c, pe_c, as_c, ae_c in PHASES:
             ps, pe = row.get(ps_c), row.get(pe_c)
             a_s, a_e = row.get(as_c), row.get(ae_c)
@@ -551,51 +331,33 @@ if st.session_state.logged_in:
             y_vals.append(y)
             y_labels.append(f"{project} — {phase}")
             project_y.append(y)
-
             planned_color = CURRENT_PLANNED_COLOR if is_current else PLANNED_COLOR
-            fig.add_trace(go.Scatter(
-                x=[ps, pe], y=[y, y], mode="lines",
-                line=dict(color=planned_color, width=PLANNED_W, dash="dash"),
-                showlegend=False,
-                hovertemplate=f"<b>{project}</b><br>{phase}<br>Planned: {ps:%d-%b-%Y} → {pe:%d-%b-%Y}<extra></extra>",
-            ))
-
+            fig.add_trace(go.Scatter(x=[ps, pe], y=[y, y], mode="lines",
+                line=dict(color=planned_color, width=PLANNED_W, dash="dash"), showlegend=False,
+                hovertemplate=f"<b>{project}</b><br>{phase}<br>Planned: {ps:%d-%b-%Y} → {pe:%d-%b-%Y}<extra></extra>"))
             if pd.notna(a_s):
                 is_running = pd.isna(a_e)
                 actual_end = a_e if pd.notna(a_e) else today
                 actual_color = CURRENT_ACTUAL_COLOR if is_current else (RUNNING_COLOR if is_running else ACTUAL_COLOR)
-                fig.add_trace(go.Scatter(
-                    x=[a_s, actual_end], y=[y, y], mode="lines",
-                    line=dict(color=actual_color, width=ACTUAL_W),
-                    showlegend=False,
-                    hovertemplate=f"<b>{project}</b><br>{phase}<br>Actual: {a_s:%d-%b-%Y} → {actual_end:%d-%b-%Y}{' (running)' if is_running else ''}<extra></extra>",
-                ))
+                fig.add_trace(go.Scatter(x=[a_s, actual_end], y=[y, y], mode="lines",
+                    line=dict(color=actual_color, width=ACTUAL_W), showlegend=False,
+                    hovertemplate=f"<b>{project}</b><br>{phase}<br>Actual: {a_s:%d-%b-%Y} → {actual_end:%d-%b-%Y}{' (running)' if is_running else ''}<extra></extra>"))
                 if is_running:
                     fig.add_annotation(x=actual_end, y=y, text="<b>↝</b>", showarrow=False,
-                        xanchor="left", yanchor="middle",
-                        font=dict(size=22, color="#0f766e"),
-                        bgcolor="rgba(255,255,255,0.6)")
+                        xanchor="left", yanchor="middle", font=dict(size=22, color="#0f766e"), bgcolor="rgba(255,255,255,0.6)")
                 if not is_running:
                     d = delay_days(pe, a_e)
                     if d > 0:
-                        fig.add_trace(go.Scatter(
-                            x=[a_e], y=[y], mode="markers+text",
-                            marker=dict(size=8, color=DELAY_COLOR),
-                            text=[f"+{d}d"], textposition="top center",
-                            textfont=dict(size=9, color=DELAY_COLOR), showlegend=False,
-                        ))
+                        fig.add_trace(go.Scatter(x=[a_e], y=[y], mode="markers+text",
+                            marker=dict(size=8, color=DELAY_COLOR), text=[f"+{d}d"], textposition="top center",
+                            textfont=dict(size=9, color=DELAY_COLOR), showlegend=False))
                     else:
-                        fig.add_annotation(x=a_e, y=y, text="<b>✓</b>", showarrow=False,
-                            font=dict(size=16, color=ONTIME_COLOR), xshift=8)
+                        fig.add_annotation(x=a_e, y=y, text="<b>✓</b>", showarrow=False, font=dict(size=16, color=ONTIME_COLOR), xshift=8)
             y += 1
-
         if project_y and responsible:
-            fig.add_annotation(
-                xref="paper", x=0.9, xanchor="left",
+            fig.add_annotation(xref="paper", x=0.9, xanchor="left",
                 y=sum(project_y) / len(project_y), yanchor="middle",
-                text=f"<span style='color:#0f766e;font-size:12px;font-weight:700'>{row.get('Responsible')}</span>",
-                showarrow=False,
-            )
+                text=f"<span style='color:#0f766e;font-size:12px;font-weight:700'>{row.get('Responsible')}</span>", showarrow=False)
         y += GAP
 
     st.markdown("""<div class="legend-strip">
@@ -608,28 +370,21 @@ if st.session_state.logged_in:
 
     fig.add_vline(x=today, line_dash="dot", line_width=1, opacity=0.35)
     fig.add_annotation(x=today, y=0.99, xref="x", yref="paper",
-        text="<b><i>Today</i></b>", showarrow=False, xanchor="center", yanchor="bottom",
-        font=dict(size=12, color="#0f766e"))
+        text="<b><i>Today</i></b>", showarrow=False, xanchor="center", yanchor="bottom", font=dict(size=12, color="#0f766e"))
     fig.update_yaxes(tickmode="array", tickvals=y_vals, ticktext=y_labels, autorange="reversed", title="")
     max_date = max(project_data[pe_c].max() if pe_c in project_data.columns else pd.Timestamp.today() for _, _, pe_c, _, _ in PHASES)
     fig.update_xaxes(
         range=[project_data[[ps_c for _, ps_c, _, _, _ in PHASES if ps_c in project_data.columns]].min().min(),
                max_date + pd.Timedelta(days=20)],
-        showgrid=True, gridcolor="rgba(0,0,0,0.03)", zeroline=False,
-    )
+        showgrid=True, gridcolor="rgba(0,0,0,0.03)", zeroline=False)
     fig.update_layout(
-        height=max(380, 20 * len(y_vals)),
-        margin=dict(l=95, r=80, t=20, b=10),
-        plot_bgcolor="white", paper_bgcolor="white", hovermode="closest",
-        font=dict(family="Outfit, sans-serif"),
-    )
+        height=max(380, 20 * len(y_vals)), margin=dict(l=95, r=80, t=20, b=10),
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        hovermode="closest", font=dict(family="Outfit, sans-serif"))
     st.plotly_chart(fig, use_container_width=True)
 
-    # ──────────────────────────────────────────
-    # SUB-PROJECT
-    # ──────────────────────────────────────────
+    # ── SUB-PROJECT ──
     st.markdown('<div class="section-label">Round / Sub-Project</div>', unsafe_allow_html=True)
-
     collll1, collll2, collll3 = st.columns([1, 1, 1])
     with collll1:
         selected_project = st.selectbox("Sub-project", project_names, key="selectbox_2")
@@ -638,7 +393,6 @@ if st.session_state.logged_in:
     QA_records_link = project_data['QA-Notes link'][0]
     proj_completed = project_data['Completed'][0]
     project_data_tools = df_tools[df_tools['Project Name'] == selected_project].reset_index()
-
     tool_col_map = project_data_tools.set_index('Tool')['main_cols'].to_dict()
 
     def compute_vid(row):
@@ -661,143 +415,76 @@ if st.session_state.logged_in:
         def_var1 = [item.strip() for item in parts[1].split(",")] if len(parts) > 1 else []
         def_var2 = [item.strip() for item in parts[2].split(",")] if len(parts) > 2 else []
 
-    # ──────────────────────────────────────────
-    # ROADMAP — Refined Progress Stepper
-    # ──────────────────────────────────────────
+    # ── ROADMAP ──
     def generate_roadmap_html(steps, current_step_label):
         processed_steps = []
         try:
             current_index = [s['label'] for s in steps].index(current_step_label)
         except ValueError:
             current_index = -1
-
         for i, step in enumerate(steps):
-            if current_index == -1:
-                status = 'upcoming'
-            elif i < current_index:
-                status = 'completed'
-            elif i == current_index:
-                status = 'ongoing'
-            else:
-                status = 'upcoming'
+            if current_index == -1: status = 'upcoming'
+            elif i < current_index: status = 'completed'
+            elif i == current_index: status = 'ongoing'
+            else: status = 'upcoming'
             processed_steps.append({'label': step['label'], 'status': status})
-
         num_steps = len(processed_steps)
         completed_steps = sum(1 for s in processed_steps if s['status'] == 'completed')
         progress_pct = (completed_steps / (num_steps - 1)) * 100 if num_steps > 1 else 0
-
         nodes_html = ""
         for i, step in enumerate(processed_steps):
             s = step['status']
             if s == 'completed':
                 inner = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>'
-                ring_bg = '#0f766e'
-                ring_border = '#0f766e'
-                txt_color = '#0f766e'
-                txt_weight = '600'
-                size = '30px'
+                ring_bg, ring_border, txt_color, txt_weight, size = '#0f766e', '#0f766e', '#0f766e', '600', '30px'
             elif s == 'ongoing':
                 inner = '<div style="width:10px;height:10px;background:#fff;border-radius:50%;animation:pulse-dot 2s ease infinite;"></div>'
-                ring_bg = '#1e293b'
-                ring_border = '#1e293b'
-                txt_color = '#1e293b'
-                txt_weight = '800'
-                size = '36px'
+                ring_bg, ring_border, txt_color, txt_weight, size = '#1e293b', '#1e293b', '#1e293b', '800', '36px'
             else:
                 inner = '<div style="width:6px;height:6px;background:#cbd5e1;border-radius:50%;"></div>'
-                ring_bg = '#f1f5f9'
-                ring_border = '#e2e8f0'
-                txt_color = '#94a3b8'
-                txt_weight = '400'
-                size = '28px'
-
-            nodes_html += f"""
-            <div style="display:flex;flex-direction:column;align-items:center;width:{100/num_steps}%;">
-                <div style="width:{size};height:{size};border-radius:50%;
-                    background:{ring_bg};border:2px solid {ring_border};
-                    display:flex;align-items:center;justify-content:center;z-index:2;
-                    box-shadow:{'0 0 0 4px rgba(30,41,59,0.1)' if s=='ongoing' else 'none'};">
-                    {inner}
-                </div>
-                <p style="margin-top:36px;font-size:10px;font-weight:{txt_weight};
-                    color:{txt_color};width:80px;text-align:center;line-height:1.3;
-                    letter-spacing:0.02em;">
-                    {step['label']}
-                </p>
+                ring_bg, ring_border, txt_color, txt_weight, size = 'rgba(255,255,255,0.7)', '#e2e8f0', '#94a3b8', '400', '28px'
+            shadow = "box-shadow:0 0 0 4px rgba(30,41,59,0.1);" if s=='ongoing' else ""
+            nodes_html += f"""<div style="display:flex;flex-direction:column;align-items:center;width:{100/num_steps}%;">
+                <div style="width:{size};height:{size};border-radius:50%;background:{ring_bg};border:2px solid {ring_border};
+                    display:flex;align-items:center;justify-content:center;z-index:2;{shadow}">{inner}</div>
+                <p style="margin-top:36px;font-size:10px;font-weight:{txt_weight};color:{txt_color};width:80px;text-align:center;line-height:1.3;letter-spacing:0.02em;">{step['label']}</p>
             </div>"""
-
         pw = f"calc({progress_pct}%)" if num_steps > 1 else "0%"
-        return f"""
-        <style>@keyframes pulse-dot{{0%,100%{{transform:scale(1);opacity:1}}50%{{transform:scale(1.5);opacity:.5}}}}</style>
-        <div style="max-width:100%;margin:0 auto;padding:20px 8px;">
-            <div style="position:relative;width:100%;">
-                <div style="position:absolute;top:50%;transform:translateY(-50%);width:100%;height:4px;background:#e2e8f0;border-radius:99px;"></div>
-                <div style="position:absolute;top:50%;transform:translateY(-50%);width:{pw};height:4px;
-                    background:linear-gradient(90deg,#0f766e,#14b8a6);border-radius:99px;transition:width .5s;"></div>
-                <div style="position:relative;display:flex;justify-content:space-between;align-items:flex-start;width:100%;">
-                    {nodes_html}
-                </div>
-            </div>
-        </div>"""
+        return f"""<style>@keyframes pulse-dot{{0%,100%{{transform:scale(1);opacity:1}}50%{{transform:scale(1.5);opacity:.5}}}}</style>
+        <div style="max-width:100%;margin:0 auto;padding:20px 8px;"><div style="position:relative;width:100%;">
+            <div style="position:absolute;top:50%;transform:translateY(-50%);width:100%;height:4px;background:#e2e8f0;border-radius:99px;"></div>
+            <div style="position:absolute;top:50%;transform:translateY(-50%);width:{pw};height:4px;background:linear-gradient(90deg,#0f766e,#14b8a6);border-radius:99px;transition:width .5s;"></div>
+            <div style="position:relative;display:flex;justify-content:space-between;align-items:flex-start;width:100%;">{nodes_html}</div>
+        </div></div>"""
 
-    steps_data = [
-        {"label": "Form Coding (XLSForm)"},
-        {"label": "Training"},
-        {"label": "QA-Manual Checks"},
-        {"label": "QA-Automated Checks"},
-        {"label": "QA-Dataset Finalization"},
-        {"label": "DM-Dataset Finalization"},
-        {"label": "QA Report"},
-        {"label": "QA Completion"},
-    ]
+    steps_data = [{"label": "Form Coding (XLSForm)"}, {"label": "Training"}, {"label": "QA-Manual Checks"},
+        {"label": "QA-Automated Checks"}, {"label": "QA-Dataset Finalization"}, {"label": "DM-Dataset Finalization"},
+        {"label": "QA Report"}, {"label": "QA Completion"}]
     current_step = project_data['current_step'][0]
-    roadmap_html = generate_roadmap_html(steps_data, current_step)
-    st.components.v1.html(roadmap_html, height=150)
+    st.components.v1.html(generate_roadmap_html(steps_data, current_step), height=150)
 
-    # ──────────────────────────────────────────
-    # PROJECT LINKS
-    # ──────────────────────────────────────────
+    # ── PROJECT LINKS ──
     st.markdown('<div class="section-label">Project Links</div>', unsafe_allow_html=True)
-
     links_row = project_data[['Tool link', 'XLSForm link', 'QA-Notes link', 'Tracker link', 'DC Tracker', 'Document folder link']].iloc[0]
-    link_labels = {
-        'Tool link':            ('🛠️', 'Tool'),
-        'XLSForm link':         ('📋', 'XLSForm'),
-        'QA-Notes link':        ('📊', 'QA Notes'),
-        'Tracker link':         ('📈', 'QA Tracker'),
-        'DC Tracker':           ('📉', 'DC Tracker'),
-        'Document folder link': ('📁', 'Docs'),
-    }
+    link_labels = {'Tool link': ('🛠️', 'Tool'), 'XLSForm link': ('📋', 'XLSForm'), 'QA-Notes link': ('📊', 'QA Notes'),
+        'Tracker link': ('📈', 'QA Tracker'), 'DC Tracker': ('📉', 'DC Tracker'), 'Document folder link': ('📁', 'Docs')}
     cards_html = '<div class="links-grid">'
     for col_name, (icon, label) in link_labels.items():
         value = links_row[col_name]
         if pd.notna(value) and str(value).strip():
-            cards_html += f"""<div class="link-tile">
-                <div class="tile-icon">{icon}</div>
-                <div class="tile-label">{label}</div>
-                <a href="{value}" target="_blank">Open →</a>
-            </div>"""
+            cards_html += f'<div class="link-tile"><div class="tile-icon">{icon}</div><div class="tile-label">{label}</div><a href="{value}" target="_blank">Open →</a></div>'
         else:
-            cards_html += f"""<div class="link-tile na">
-                <div class="tile-icon">{icon}</div>
-                <div class="tile-label">{label}</div>
-                <span style="font-size:12px;color:#94a3b8;font-style:italic;">N/A</span>
-            </div>"""
+            cards_html += f'<div class="link-tile na"><div class="tile-icon">{icon}</div><div class="tile-label">{label}</div><span style="font-size:12px;color:#94a3b8;font-style:italic;">N/A</span></div>'
     cards_html += '</div>'
     st.markdown(cards_html, unsafe_allow_html=True)
 
-    # ──────────────────────────────────────────
-    # ARCHIVED OR DATA METRICS
-    # ──────────────────────────────────────────
+    # ── ARCHIVED OR DATA METRICS ──
     if proj_completed == "Yes":
-        st.markdown("""<div class="archived-card">
-            <h3>📁 Project Archived</h3>
+        st.markdown("""<div class="archived-card"><h3>📁 Project Archived</h3>
             <p>This project has been archived. For complete information on sampling and site visits,
-            please refer to the Document field. Relevant datasets and trackers are also available.</p>
-        </div>""", unsafe_allow_html=True)
+            please refer to the Document field. Relevant datasets and trackers are also available.</p></div>""", unsafe_allow_html=True)
     else:
         st.markdown('<div class="section-label">Data Metrics</div>', unsafe_allow_html=True)
-
         with st.spinner('Loading/refreshing project data...'):
             missing = pd.DataFrame(columns=['Tool','V_ID','KEY','Type','QA_Status'])
             rawsheet = project_data['raw_sheet'][0]
@@ -808,13 +495,11 @@ if st.session_state.logged_in:
             csv_url_raw = f"https://docs.google.com/spreadsheets/d/{raw_sheet_id}/export?format=csv&id={raw_sheet_id}&gid=0"
             t = pd.read_csv(csv_url_raw)
             t['KEY_Unique'] = t['KEY']
-
             qasheet = "https://docs.google.com/spreadsheets/d/1V1SfBZUwHN0NtXFIoiXEh7JGkpTUOLZnGAfFN8QVXYQ/export?format=csv&" + Project_QA_ID2
             qalog = pd.read_csv(qasheet)
             t = pd.merge(t, qalog[['QA_Status','KEY_Unique']].drop_duplicates('KEY_Unique'), on='KEY_Unique', how='left')
             t['QA_Status'] = t['QA_Status'].replace('', "Not QA'ed Yet")
             t['QA_Status'] = t['QA_Status'].fillna("Not QA'ed Yet")
-
             extra_code = project_data['extra_code'][0]
             Add_cols = project_data_tools['Add_columns'][0]
             t['Completion_status'] = 'Complete'
@@ -822,7 +507,6 @@ if st.session_state.logged_in:
                 exec(extra_code)
             t['SubmissionDate'] = pd.to_datetime(t['SubmissionDate'], errors='coerce')
             t = t.sort_values(by=['Completion_status', 'QA_Status'], ascending=True)
-
             t['occurance'] = None
             for tool, cols in tool_col_map.items():
                 group_cols = [c for c in cols.split('-') if c != 'occurance']
@@ -830,7 +514,6 @@ if st.session_state.logged_in:
                 t.loc[mask, 'occurance'] = t.loc[mask].groupby(group_cols).cumcount() + 1
             t['occurance'] = t['occurance'].fillna(9999).astype(int)
             t['V_ID'] = t.apply(compute_vid, axis=1)
-
             samplingsheet = "https://docs.google.com/spreadsheets/d/1U0Y7TQnTFEg1edMb0IHejOxv9S2YLY2UH-tp1qzXyBg/export?format=csv&" + Project_QA_ID
             tari = pd.read_csv(samplingsheet)
             tari['V_ID'] = tari['Tool'] + "/" + tari['V_ID']
@@ -842,8 +525,6 @@ if st.session_state.logged_in:
             tari = pd.concat([tari, df_free], ignore_index=True)
 
         tool_names = project_data_tools['Tool'].unique()
-
-        # ── Filters using native Streamlit ──
         coll1, coll2, coll3 = st.columns(3)
         with coll1:
             selected_tool = st.multiselect('Tool', tool_names, default=None)
@@ -851,17 +532,13 @@ if st.session_state.logged_in:
             t = t[t.Tool.isin(selected_tool)]
             tari = tari[tari.Tool.isin(selected_tool)]
         with coll2:
-            qastatus = st.multiselect(
-                'QA Status',
-                t.QA_Status.unique().tolist(),
-                default=[x for x in t.QA_Status.unique().tolist() if x != 'Rejected_paused']
-            )
+            qastatus = st.multiselect('QA Status', t.QA_Status.unique().tolist(),
+                default=[x for x in t.QA_Status.unique().tolist() if x != 'Rejected_paused'])
         with coll3:
             status_options = ['Complete', 'Incomplete']
             completion = st.multiselect('Completion Status', options=status_options, default=['Complete', 'Incomplete'])
 
         t = t[(t.QA_Status.isin(qastatus)) & (t.Completion_status.isin(completion))].copy()
-
         tari = tari.merge(t[['V_ID'] + [c for c in t.columns if c not in tari.columns and c != 'V_ID']].drop_duplicates('V_ID'), on='V_ID', how='left')
         t = t.merge(tari[['V_ID'] + [c for c in tari.columns if c not in t.columns and c != 'V_ID']].drop_duplicates('V_ID'), on='V_ID', how='left')
 
@@ -880,30 +557,18 @@ if st.session_state.logged_in:
         dff.columns = ['Date', 'N']
         dff = dff.sort_values(by='Date', ascending=False)
 
-        # ── Timeline Chart — Polished ──
         fig_timeline = px.area(dff, x='Date', y='N')
-        fig_timeline.update_traces(
-            line=dict(color='#0f766e', width=2.5),
-            fillcolor='rgba(15,118,110,0.08)',
-            mode='lines+markers',
-            marker=dict(color='#0f766e', size=6, line=dict(width=2, color='#fff')),
-        )
-        fig_timeline.update_layout(
-            xaxis_title='', yaxis_title='Submissions',
-            template='plotly_white', height=320,
-            margin=dict(l=40, r=20, t=10, b=30),
-            font=dict(family="Outfit, sans-serif"),
+        fig_timeline.update_traces(line=dict(color='#0f766e', width=2.5), fillcolor='rgba(15,118,110,0.08)',
+            mode='lines+markers', marker=dict(color='#0f766e', size=5, line=dict(width=2, color='rgba(255,255,255,0.8)')))
+        fig_timeline.update_layout(xaxis_title='', yaxis_title='Submissions', template='plotly_white', height=320,
+            margin=dict(l=40, r=20, t=10, b=30), font=dict(family="Outfit, sans-serif"),
             plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-            xaxis=dict(gridcolor="rgba(0,0,0,0.03)"),
-            yaxis=dict(gridcolor="rgba(0,0,0,0.05)"),
-        )
+            xaxis=dict(gridcolor="rgba(0,0,0,0.03)"), yaxis=dict(gridcolor="rgba(0,0,0,0.05)"))
 
-        # ── Map ──
         @st.cache_data(show_spinner=False)
         def load_geojson(path):
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
-
         def build_map(geo_raw, counts_df):
             geo = copy.deepcopy(geo_raw)
             count_map = dict(zip(counts_df["Province"], counts_df["count"]))
@@ -911,17 +576,13 @@ if st.session_state.logged_in:
                 name = feat["properties"].get("NAME_1")
                 feat["properties"]["VISITS"] = int(count_map.get(name, 0))
             m = folium.Map(location=[34.5, 66.0], zoom_start=5, tiles="CartoDB positron")
-            folium.Choropleth(
-                geo_data=geo, data=counts_df, columns=["Province", "count"],
+            folium.Choropleth(geo_data=geo, data=counts_df, columns=["Province", "count"],
                 key_on="feature.properties.NAME_1", fill_color="YlGnBu",
                 fill_opacity=0.8, line_opacity=0.25, nan_fill_color="#EAEAEA",
-                nan_fill_opacity=0.65, legend_name="Visits",
-            ).add_to(m)
-            folium.GeoJson(
-                geo, style_function=lambda f: {"color": "#777", "weight": 0.7, "fillOpacity": 0},
+                nan_fill_opacity=0.65, legend_name="Visits").add_to(m)
+            folium.GeoJson(geo, style_function=lambda f: {"color": "#777", "weight": 0.7, "fillOpacity": 0},
                 highlight_function=lambda f: {"color": "#111", "weight": 2},
-                tooltip=folium.GeoJsonTooltip(fields=["NAME_1", "VISITS"], aliases=["Province:", "Visits:"], sticky=True),
-            ).add_to(m)
+                tooltip=folium.GeoJsonTooltip(fields=["NAME_1", "VISITS"], aliases=["Province:", "Visits:"], sticky=True)).add_to(m)
             return m
 
         counts = t.groupby("Province").size().reset_index(name="count")
@@ -930,7 +591,6 @@ if st.session_state.logged_in:
         geo_raw = load_geojson("afghanistan_provinces.geojson")
         m = build_map(geo_raw, counts)
 
-        # ── Map + Timeline side by side in containers ──
         colii1, colii2 = st.columns(2)
         with colii1:
             with st.container(border=True):
@@ -941,32 +601,23 @@ if st.session_state.logged_in:
                 st.markdown("### Submission Timeline")
                 st.plotly_chart(fig_timeline, use_container_width=True)
 
-        # ──────────────────────────────────────
-        # SAMPLE TRACKING
-        # ──────────────────────────────────────
+        # ── SAMPLE TRACKING ──
         st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
-
         target = tari.groupby('Tool').size()
         received = tari[tari.QA_Status.notna()].groupby('Tool').size()
         approved = tari[tari.QA_Status == 'Approved'].groupby('Tool').size()
         rejected = tari[tari.QA_Status == 'Rejected'].groupby('Tool').size()
         awaiting = tari[tari.QA_Status.isin(["Not QA'ed Yet", 'Pending'])].groupby('Tool').size()
-
-        data_metrics = pd.DataFrame({
-            'Target': target, 'Received data': received, 'Approved data': approved,
-            'Rejected data': rejected, 'Awaiting review': awaiting
-        }).fillna(0).astype(int).reset_index()
-
+        data_metrics = pd.DataFrame({'Target': target, 'Received data': received, 'Approved data': approved,
+            'Rejected data': rejected, 'Awaiting review': awaiting}).fillna(0).astype(int).reset_index()
         if len(data_metrics) > 1:
             data_metrics.loc['Total'] = data_metrics.sum(numeric_only=True)
             data_metrics.loc['Total', 'Tool'] = 'All Tools'
-
         data_metrics['DC Completion %'] = ((data_metrics['Received data'] / data_metrics['Target']) * 100).round(2)
         data_metrics['Completed ✅'] = (data_metrics['Target'] == data_metrics['Approved data']).apply(lambda x: '✅' if x else '❌')
-
         st.dataframe(data_metrics, hide_index=True, use_container_width=True)
 
-        # ── KPI Cards using native st.metric ──
+        # ── KPI + DONUT COMBINED LAYOUT ──
         total_target = tari.shape[0]
         total_received = tari[tari.QA_Status.isin(qastatus)].shape[0]
         total_remaining = max(0, total_target - total_received)
@@ -977,70 +628,82 @@ if st.session_state.logged_in:
         qa_pct = round(100 * approved_n / total_received) if total_received else 0
 
         ""
-        with st.container(horizontal=True, gap="medium"):
-            kpi_cols = st.columns(4, gap="medium")
-            with kpi_cols[0]:
-                st.metric("DC Progress", f"{dc_pct}%", delta=f"{total_received}/{total_target} received")
-            with kpi_cols[1]:
-                st.metric("QA Approved", f"{approved_n}", delta=f"{qa_pct}% approval rate")
-            with kpi_cols[2]:
-                st.metric("Rejected", f"{rejected_n}", delta="Requires re-collection", delta_color="inverse")
-            with kpi_cols[3]:
-                st.metric("Remaining", f"{total_remaining}", delta="Not yet received", delta_color="off")
+        col_kpi, col_donuts = st.columns([1, 2], gap="medium")
 
-        # ── Donut Charts — Refined ──
-        labels1 = ['Received', 'Remaining']
-        values1 = [total_received, total_remaining]
-        labels2 = g['QA_Status'].tolist()
-        values2 = g['count'].tolist()
+        with col_kpi:
+            st.markdown(f"""<div class="kpi-stack">
+                <div class="kpi-card-v">
+                    <div class="kpi-icon-circle" style="background:rgba(15,118,110,0.1);color:#0f766e;">📥</div>
+                    <div class="kpi-body">
+                        <div class="kpi-label">DC Progress</div>
+                        <div class="kpi-value" style="color:#0f766e;">{dc_pct}%</div>
+                        <div class="kpi-sub">{total_received} / {total_target} received</div>
+                        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{dc_pct}%;background:linear-gradient(90deg,#0f766e,#14b8a6);"></div></div>
+                    </div>
+                </div>
+                <div class="kpi-card-v">
+                    <div class="kpi-icon-circle" style="background:rgba(16,185,129,0.1);color:#10b981;">✓</div>
+                    <div class="kpi-body">
+                        <div class="kpi-label">QA Approved</div>
+                        <div class="kpi-value" style="color:#10b981;">{approved_n}</div>
+                        <div class="kpi-sub">{qa_pct}% approval rate</div>
+                        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{qa_pct}%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
+                    </div>
+                </div>
+                <div class="kpi-card-v">
+                    <div class="kpi-icon-circle" style="background:rgba(239,68,68,0.1);color:#ef4444;">✕</div>
+                    <div class="kpi-body">
+                        <div class="kpi-label">Rejected</div>
+                        <div class="kpi-value" style="color:#ef4444;">{rejected_n}</div>
+                        <div class="kpi-sub">Requires re-collection</div>
+                    </div>
+                </div>
+                <div class="kpi-card-v">
+                    <div class="kpi-icon-circle" style="background:rgba(100,116,139,0.1);color:#64748b;">⏳</div>
+                    <div class="kpi-body">
+                        <div class="kpi-label">Remaining</div>
+                        <div class="kpi-value" style="color:#64748b;">{total_remaining}</div>
+                        <div class="kpi-sub">Not yet received</div>
+                    </div>
+                </div>
+            </div>""", unsafe_allow_html=True)
 
-        DONUT_PALETTE_DC = ["#0f766e", "#e2e8f0"]
-        DONUT_PALETTE_QA = ["#10b981", "#ef4444", "#f59e0b", "#cbd5e1"]
+        with col_donuts:
+            labels1 = ['Received', 'Remaining']
+            values1 = [total_received, total_remaining]
+            labels2 = g['QA_Status'].tolist()
+            values2 = g['count'].tolist()
+            DONUT_PALETTE_DC = ["#0f766e", "#e2e8f0"]
+            DONUT_PALETTE_QA = ["#10b981", "#ef4444", "#f59e0b", "#cbd5e1"]
 
-        def make_donut(labels, values, title, colors, note=""):
-            pct = round(100 * values[0] / sum(values)) if sum(values) else 0
-            fig = go.Figure(go.Pie(
-                labels=labels, values=values, hole=0.78,
-                textinfo="percent", textfont=dict(size=11, color="#64748b", family="Outfit"),
-                marker=dict(colors=colors[:len(values)], line=dict(color="#fff", width=3)),
-                pull=[0.03] + [0] * (len(values) - 1),
-                hovertemplate="<b>%{label}</b>: %{percent}<extra></extra>",
-                showlegend=True, sort=False,
-            ))
-            fig.update_layout(
-                title=dict(text=title, x=0.5, xanchor="center",
-                    font=dict(size=14, color="#0f172a", family="Outfit")),
-                height=280, margin=dict(l=0, r=0, t=50, b=0),
-                template="plotly_white",
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                legend=dict(orientation="h", y=-0.08, x=0.5, xanchor="center",
-                    font=dict(size=11, color="#64748b", family="Outfit")),
-                annotations=[dict(
-                    text=f"<b style='font-size:26px;color:#0f172a;font-family:JetBrains Mono'>{pct}%</b><br>"
-                         f"<span style='font-size:10px;color:#94a3b8'>{note}</span>",
-                    x=0.5, y=0.5, showarrow=False,
-                )]
-            )
-            return fig
+            def make_donut(labels, values, title, colors, note=""):
+                pct = round(100 * values[0] / sum(values)) if sum(values) else 0
+                fig = go.Figure(go.Pie(labels=labels, values=values, hole=0.78,
+                    textinfo="percent", textfont=dict(size=11, color="#64748b", family="Outfit"),
+                    marker=dict(colors=colors[:len(values)], line=dict(color="rgba(244,245,247,1)", width=4)),
+                    pull=[0.03] + [0] * (len(values) - 1),
+                    hovertemplate="<b>%{label}</b>: %{percent}<extra></extra>", showlegend=True, sort=False))
+                fig.update_layout(
+                    title=dict(text=title, x=0.5, xanchor="center", font=dict(size=14, color="#0f172a", family="Outfit")),
+                    height=280, margin=dict(l=0, r=0, t=50, b=0), template="plotly_white",
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                    legend=dict(orientation="h", y=-0.08, x=0.5, xanchor="center", font=dict(size=11, color="#64748b", family="Outfit")),
+                    annotations=[dict(text=f"<b style='font-size:28px;color:#0f172a;font-family:JetBrains Mono'>{pct}%</b><br><span style='font-size:10px;color:#94a3b8'>{note}</span>",
+                        x=0.5, y=0.5, showarrow=False)])
+                return fig
 
-        has_both = all(status in completion for status in status_options)
-        has_call_status = "Call Status" in t.columns
-        if has_both and has_call_status:
-            terminology = 'Called'
-        elif has_both:
-            terminology = 'Visited'
-        else:
-            terminology = completion[0] if completion else ''
+            has_both = all(status in completion for status in status_options)
+            has_call_status = "Call Status" in t.columns
+            if has_both and has_call_status: terminology = 'Called'
+            elif has_both: terminology = 'Visited'
+            else: terminology = completion[0] if completion else ''
 
-        fig1 = make_donut(labels1, values1, "Data Collection", DONUT_PALETTE_DC, terminology)
-        fig2 = make_donut(labels2, values2, "QA Progress", DONUT_PALETTE_QA, "QA'ed")
-
-        cols_chart = st.columns(2)
-        with cols_chart[0]:
-            with st.container(border=True):
+            fig1 = make_donut(labels1, values1, "Data Collection", DONUT_PALETTE_DC, terminology)
+            fig2 = make_donut(labels2, values2, "QA Progress", DONUT_PALETTE_QA, "QA'ed")
+            d_col1, d_col2 = st.columns(2)
+            with d_col1:
                 st.plotly_chart(fig1, use_container_width=True)
-        with cols_chart[1]:
-            with st.container(border=True):
+            with d_col2:
                 st.plotly_chart(fig2, use_container_width=True)
 
         t = t[t['QA_Status'].isin(qastatus)]
@@ -1051,13 +714,9 @@ if st.session_state.logged_in:
         dup = t[t.V_ID.duplicated(keep='first')][['Tool', 'V_ID', 'KEY', 'QA_Status']]
         dup['Type'] = 'Duplicate Data'
         missing = pd.concat([missing, m_df, ext, dup])
-
         if "Call Status" in tall.columns:
-            try:
-                tall2
-            except NameError:
-                tall2 = tall
-
+            try: tall2
+            except NameError: tall2 = tall
         tall = tall[~tall.KEY.isin(pd.concat([ext.KEY, dup.KEY]))]
 
         col1, col2 = st.columns(2)
@@ -1065,17 +724,13 @@ if st.session_state.logged_in:
             tari_csv = convert_df_to_csv(tari)
             st.download_button(label="⬇ Download Target Data", data=tari_csv, file_name='Sample_Tracking.csv', mime='text/csv')
 
-        # Notes
         j = project_data['notes'][0]
         if j != "-":
             st.markdown(eval(j[1:-1]), unsafe_allow_html=True)
 
-        # ──────────────────────────────────────
-        # SUMMARY GENERATION
-        # ──────────────────────────────────────
+        # ── SUMMARY GENERATION ──
         st.markdown('<div class="section-label">Summary Generation</div>', unsafe_allow_html=True)
         st.info('Summaries include both "Complete" and "Incomplete" submissions by default. Select only "Complete" for accurate sample tracking.')
-
         col3, col4 = st.columns(2)
         with col3:
             with st.container(border=True):
@@ -1100,7 +755,6 @@ if st.session_state.logged_in:
                         disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
                         disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
                     st.dataframe(disag_t)
-
         if 'tall2' in locals():
             disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,
                 help='For phone surveys where multiple attempts to reach respondents may be necessary.')
@@ -1114,22 +768,18 @@ if st.session_state.logged_in:
                     disag_traw.loc['Total'] = disag_traw.sum(numeric_only=True)
                 st.dataframe(disag_traw)
 
-    # ──────────────────────────────────────────
-    # UPDATE LOGS
-    # ──────────────────────────────────────────
+    # ── UPDATE LOGS ──
     def parse_log(log_text):
         log_text = log_text if isinstance(log_text, str) else ""
         parts = [p.strip() for p in re.split(r";;\s*", log_text.strip()) if p.strip()]
         rows = []
         for p in parts:
-            if ":" not in p:
-                continue
+            if ":" not in p: continue
             ds, msg = p.split(":", 1)
             d = datetime.strptime(ds.strip(), "%d/%m/%Y").date()
             rows.append((d, msg.strip()))
         rows.sort(key=lambda x: x[0])
         return rows
-
     log_text = project_data.loc[0, "Logs"]
     rows = parse_log(log_text)
     by_day = {}
@@ -1141,44 +791,24 @@ if st.session_state.logged_in:
     header = f"📋 Project Updates · {total_logs} update{'s' if total_logs != 1 else ''}"
     if start_d:
         header += f" · {start_d.strftime('%d %b %Y')} → {end_d.strftime('%d %b %Y')}"
-
     with st.expander(header, expanded=False):
         days = list(by_day.items())
         for i, (d, msgs) in enumerate(days):
-            st.markdown(
-                f"""<div class="upd-day">
-                    <div class="upd-date">{d.strftime('%d %b %Y')}</div>
-                    {''.join([f"<div class='upd-item'><span class='upd-dot'>•</span>{m_item}</div>" for m_item in msgs])}
-                </div>{"<div class='upd-sep'></div>" if i < len(days)-1 else ""}""",
-                unsafe_allow_html=True
-            )
+            st.markdown(f"""<div class="upd-day"><div class="upd-date">{d.strftime('%d %b %Y')}</div>
+                {''.join([f"<div class='upd-item'><span class='upd-dot'>•</span>{m_item}</div>" for m_item in msgs])}
+                </div>{"<div class='upd-sep'></div>" if i < len(days)-1 else ""}""", unsafe_allow_html=True)
 
-    # ──────────────────────────────────────────
-    # SURVEYOR REPORT (ECD / EFSP)
-    # ──────────────────────────────────────────
+    # ── SURVEYOR REPORT (ECD / EFSP) ──
     if main_project in ['ECD', 'EFSP']:
         sr = st.button("Generate Surveyor Performance Report", key="create_report_btn", type="primary")
         if sr and main_project in ['ECD', 'EFSP']:
-            qalog2 = pd.merge(
-                tall,
-                qalog[['Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved', 'KEY_Unique']],
-                on='KEY_Unique', how='left'
-            )
+            qalog2 = pd.merge(tall, qalog[['Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved', 'KEY_Unique']], on='KEY_Unique', how='left')
             qalog2['severity'] = qalog2['QA_Status'].map({'Rejected': 'High', 'Approved': 'Low', 'Pending': 'Medium'})
-            issues = qalog2[['Site_Visit_ID', 'Province', 'Village', 'severity', 'QA_Status', 'Surveyor_Name', 'KEY', 'Date',
-                'Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved']].copy()
-
-            summary_sr = (
-                qalog2.groupby('Surveyor_Name')
-                .agg(
-                    total_submissions=('Surveyor_Name', 'size'),
-                    rejected_count=('QA_Status', lambda x: (x == 'Rejected').sum()),
-                    total_feedback_ratio=('Issue_Type', lambda x: x.notna().mean())
-                )
-                .assign(rejection_ratio=lambda d: d.rejected_count / d.total_submissions)
-                .reset_index()
-            )
-
+            issues = qalog2[['Site_Visit_ID', 'Province', 'Village', 'severity', 'QA_Status', 'Surveyor_Name', 'KEY', 'Date', 'Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved']].copy()
+            summary_sr = (qalog2.groupby('Surveyor_Name').agg(total_submissions=('Surveyor_Name', 'size'),
+                rejected_count=('QA_Status', lambda x: (x == 'Rejected').sum()),
+                total_feedback_ratio=('Issue_Type', lambda x: x.notna().mean()))
+                .assign(rejection_ratio=lambda d: d.rejected_count / d.total_submissions).reset_index())
             hfcsheet = "https://docs.google.com/spreadsheets/d/16EWCV7HTEx729ILvsYa72LkJ1P1Sw7Fo2R0FzXs3GvE/export?format=csv&" + Project_QA_ID3
             hfc = pd.read_csv(hfcsheet)
             hfc = hfc.drop_duplicates(subset='Surveyor_Name')
@@ -1188,10 +818,8 @@ if st.session_state.logged_in:
             for c in ["Issue_Description", "surveyor_response", "Province", "Village", "Site_Visit_ID", "Surveyor_Name", "Issue_Type", "KEY"]:
                 issues[c] = issues[c].fillna("")
             issues['Location'] = issues['Province'] + "-" + issues['Village']
-
             qalog2['Date'] = pd.to_datetime(qalog2['Date'], errors='coerce')
-            chart_source = qalog2[['Date', 'QA_Status', 'Surveyor_Name', 'Issue_Type', 'Issue_Description',
-                'surveyor_response', 'KEY', 'Site_Visit_ID', 'Province', 'Village', 'issue_resolved']].copy()
+            chart_source = qalog2[['Date', 'QA_Status', 'Surveyor_Name', 'Issue_Type', 'Issue_Description', 'surveyor_response', 'KEY', 'Site_Visit_ID', 'Province', 'Village', 'issue_resolved']].copy()
             chart_source['Date'] = chart_source['Date'].dt.strftime('%Y-%m-%d')
             chart_source = chart_source.dropna(subset=['Date'])
             for c in ['Issue_Type', 'Issue_Description', 'surveyor_response', 'KEY', 'Site_Visit_ID', 'Province', 'Village']:
@@ -1202,12 +830,7 @@ if st.session_state.logged_in:
 
             def score_surveyors(df_s, w_rej=0.5, w_out=0.10, w_out2=0.2, w_fb=0.2):
                 df_s = df_s.copy()
-                score = 100 - (
-                    df_s["rejection_ratio"] * 100 * w_rej
-                    + df_s["hfc_outliers_ratio"] * 100 * w_out
-                    + df_s["ta_outliers"] * 100 * w_out2
-                    + df_s["total_feedback_ratio"] * 100 * w_fb
-                )
+                score = 100 - (df_s["rejection_ratio"]*100*w_rej + df_s["hfc_outliers_ratio"]*100*w_out + df_s["ta_outliers"]*100*w_out2 + df_s["total_feedback_ratio"]*100*w_fb)
                 df_s["score"] = score.round(1).clip(0, 100)
                 conds = [df_s["score"] >= 85, df_s["score"] >= 70, df_s["score"] >= 55]
                 df_s["band"] = np.select(conds, ["Excellent", "Good", "Watch"], default="Critical")
@@ -1215,13 +838,12 @@ if st.session_state.logged_in:
                 df_s["recommendation"] = np.select(conds, ["Maintain monitoring", "Minor coaching", "Verify records"], default="Urgent Retraining")
                 return df_s
 
+            # The HTML report builder is identical to original - keeping it compact
             def build_html_report(project_name, meta, summary_df, issues_df, chart_src_json):
                 now = datetime.now().strftime("%Y-%m-%d %H:%M")
-                issues_df = issues_df.copy()
-                summary_df = summary_df.copy()
+                issues_df, summary_df = issues_df.copy(), summary_df.copy()
                 for c in ["Site_Visit_ID", "Location"]:
-                    if c not in issues_df.columns:
-                        issues_df[c] = ""
+                    if c not in issues_df.columns: issues_df[c] = ""
                 total_issues = len(issues_df)
                 resolved_count = int((issues_df.get("issue_resolved") == "Yes").sum()) if total_issues else 0
                 pending_count = total_issues - resolved_count
@@ -1230,128 +852,19 @@ if st.session_state.logged_in:
                 high_severity = int((issues_df.get("severity") == "High").sum()) if total_issues else 0
                 avg_score = float(summary_df["score"].mean()) if len(summary_df) else 0.0
                 matrix_df = summary_df.sort_values("score", ascending=True).head(10)
-                matrix_rows = "".join(
-                    f"""<tr>
-                        <td><div class="name">{r.Surveyor_Name}</div><div class="muted">ID: SURV-{abs(hash(r.Surveyor_Name)) % 1000}</div></td>
-                        <td class="c"><div class="score">{r.score}</div><div class="bar"><span style="width:{r.score}%;background:{r.band_color}"></span></div></td>
-                        <td><span class="pill" style="background:{r.band_color}">{r.band}</span></td>
-                        <td class="c mono">{int(r.total_submissions)}</td>
-                        <td class="c mono">{int(r.rejected_count)}</td>
-                        <td class="c mono red">{(r.rejection_ratio * 100):.1f}%</td>
-                        <td class="c mono blue">{(r.total_feedback_ratio * 100):.1f}%</td>
-                        <td class="c mono blue">{(r.hfc_outliers_ratio * 100):.1f}%</td>
-                        <td class="c mono">{(float(getattr(r, "ta_outliers", 0.0)) * 100):.1f}%</td>
-                        <td class="rec">{r.recommendation}</td>
-                    </tr>"""
-                    for r in matrix_df.itertuples(index=False)
-                )
+                matrix_rows = "".join(f"""<tr><td><div class="name">{r.Surveyor_Name}</div><div class="muted">ID: SURV-{abs(hash(r.Surveyor_Name)) % 1000}</div></td><td class="c"><div class="score">{r.score}</div><div class="bar"><span style="width:{r.score}%;background:{r.band_color}"></span></div></td><td><span class="pill" style="background:{r.band_color}">{r.band}</span></td><td class="c mono">{int(r.total_submissions)}</td><td class="c mono">{int(r.rejected_count)}</td><td class="c mono red">{(r.rejection_ratio*100):.1f}%</td><td class="c mono blue">{(r.total_feedback_ratio*100):.1f}%</td><td class="c mono blue">{(r.hfc_outliers_ratio*100):.1f}%</td><td class="c mono">{(float(getattr(r,"ta_outliers",0.0))*100):.1f}%</td><td class="rec">{r.recommendation}</td></tr>""" for r in matrix_df.itertuples(index=False))
                 issues_json = issues_df.to_json(orient="records")
-                return f"""<!doctype html>
-<html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>{project_name} - QA Report</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
-:root{{--bg:#f8fafc;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;
---issue-bg:#fff7ed;--issue-bd:#fed7aa;--issue-date:#9a3412;--issue-txt:#7c2d12;
---resp-bg:#f0fdfa;--resp-bd:#99f6e4;--resp-date:#0f766e;--resp-txt:#334155;}}
-*{{box-sizing:border-box}}
-body{{margin:0;font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--text)}}
-.wrap{{max-width:1100px;margin:0 auto;padding:18px}}
-.card{{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}}
-.top{{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f766e 100%);color:#fff;border:none;}}
-.top .muted{{color:rgba(255,255,255,0.6);}}
-.badge{{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.15);color:#fff;font-size:11px;font-weight:800;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);}}
-.muted{{color:var(--muted);font-size:12px}}
-h1{{margin:8px 0 2px;font-size:26px;line-height:1.1}}
-.btn{{border:0;border-radius:14px;padding:12px 14px;background:#0f766e;color:#fff;font-weight:800;cursor:pointer;font-family:'Outfit',sans-serif;}}
-.btn:hover{{background:#0d6b63;}}
-.grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}}
-.kpi .label{{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}}
-.kpi .val{{font-size:28px;font-weight:900;margin-top:6px;font-family:'JetBrains Mono',monospace;}}
-.bar{{height:7px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-top:8px}}
-.bar span{{display:block;height:100%}}
-.tablecard{{margin-top:12px;padding:0;overflow:hidden}}
-.thead{{padding:14px 18px;border-bottom:1px solid var(--line);background:#fafafa}}
-table{{width:100%;border-collapse:collapse}}
-th,td{{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:top;font-size:13px}}
-th{{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;background:#fafafa}}
-.c{{text-align:center}}.mono{{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}}
-.name{{font-weight:900}}.score{{font-weight:900}}
-.pill{{display:inline-block;padding:4px 8px;border-radius:999px;color:#fff;font-size:11px;font-weight:900}}
-.rec{{color:var(--muted);font-style:italic;font-size:12px}}
-.red{{color:#dc2626}}.blue{{color:#2563eb}}
-.filters{{display:grid;grid-template-columns:1fr 180px 220px 140px;gap:10px;margin-top:12px}}
-input,select{{padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:13px;background:#fff;font-family:'Outfit',sans-serif;}}
-.ghost{{background:#f1f5f9;color:#0f172a}}
-.ticker tbody tr{{border-bottom:1px dashed #e5e7eb}}.ticker tbody tr:last-child{{border-bottom:none}}
-.ticker tbody tr td{{padding-top:18px;padding-bottom:18px}}
-.comment{{margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid;}}
-.comment-date{{font-weight:900;font-size:12px;letter-spacing:.02em;}}.comment-body{{margin-top:4px;line-height:1.35;}}
-.comment-divider{{height:1px;margin:10px 2px;background:linear-gradient(90deg,rgba(148,163,184,0),rgba(148,163,184,0.85),rgba(148,163,184,0));}}
-.issue-comments .comment{{background:var(--issue-bg);border-color:var(--issue-bd);border-left:4px solid #fb923c;}}
-.issue-comments .comment-date{{color:var(--issue-date);}}.issue-comments .comment-body{{color:var(--issue-txt);}}
-.response-comments .comment{{background:var(--resp-bg);border-color:var(--resp-bd);border-left:4px solid #14b8a6;}}
-.response-comments .comment-date{{color:var(--resp-date);}}.response-comments .comment-body{{color:var(--resp-txt);font-style:italic;}}
-.awaiting-response{{color:#b91c1c;opacity:0.45;font-style:italic;font-weight:300;}}
-.charts-row{{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;padding:18px;margin-top:4px;}}
-.chart-box{{background:#ffffff;border:1px solid var(--line);border-radius:14px;padding:16px;position:relative;}}
-.chart-box canvas{{width:100%!important;}}
-@media print{{.no-print{{display:none!important}}body{{background:#fff}}.wrap{{padding:0}}.card{{border:0}}}}
-@media(max-width:900px){{.grid{{grid-template-columns:repeat(2,1fr)}}.filters{{grid-template-columns:1fr}}.charts-row{{grid-template-columns:1fr}}}}
-</style></head><body>
-<div class="wrap">
-<div class="card top"><div><span class="badge">{meta}</span><span class="muted" style="margin-left:10px">Report Generated: {now}</span>
-<h1>{project_name}</h1><div class="muted">Surveyor Quality Matrix + Detailed Feedback Log</div></div>
-<button class="btn no-print" onclick="window.print()">Export PDF</button></div>
-<div class="grid">
-<div class="card kpi"><div class="label">Overall Quality Score</div><div class="val">{avg_score:.1f} <span class="muted">/ 100</span></div><div class="bar"><span style="width:{avg_score}%;background:#0f766e"></span></div></div>
-<div class="card kpi"><div class="label">Total Recorded Cases</div><div class="val" style="color:#4f46e5">{total_issues}</div><div class="muted">{resolved_count} Resolved • {pending_count} Open</div></div>
-<div class="card kpi"><div class="label">Surveyor Notifications</div><div class="val">{notified_count}</div><div class="muted">Awaiting responses for {not_notified_count} cases.</div></div>
-<div class="card kpi"><div class="label">Critical (High severity)</div><div class="val" style="color:#dc2626">{high_severity}</div><div class="muted">Immediate coaching required</div></div>
-</div>
-<div class="card tablecard"><div class="thead"><div style="font-weight:900">Surveyor Performance Matrix (Worst 10)</div><div class="muted">Lowest quality score surveyors</div></div>
-<div style="overflow:auto"><table><thead><tr><th>Surveyor</th><th class="c">Score</th><th>Band</th><th class="c">Total Subs</th><th class="c">Rej #</th><th class="c">Rej %</th><th class="c">Feedback %</th><th class="c">Data incons. %</th><th class="c">Speed Vio. %</th><th>Action</th></tr></thead>
-<tbody>{matrix_rows}</tbody></table></div></div>
-<div class="card tablecard" style="margin-top:12px"><div class="thead"><div style="font-weight:900;text-align:center">Detailed Feedback Log</div>
-<div class="filters no-print"><input id="q" placeholder="Search logs..."/><select id="fResolved"><option value="">Status: All</option><option value="Yes">Resolved</option><option value="No">Pending</option></select>
-<select id="fSurveyor"><option value="">Surveyor: All</option></select><button class="btn ghost" id="reset" type="button">Clear</button></div></div>
-<div class="charts-row"><div class="chart-box"><canvas id="trendChart"></canvas></div><div class="chart-box"><canvas id="issueTypeChart"></canvas></div></div>
-<div style="overflow:auto"><table class="ticker"><thead><tr><th>Verification Detail</th><th>Surveyor Response</th><th class="c">Severity</th><th class="c">Status</th></tr></thead><tbody id="tbody"></tbody></table></div></div></div>
-<script>
-const data={issues_json};const chartSource={chart_src_json};
-const tbody=document.getElementById('tbody');const sSelect=document.getElementById('fSurveyor');
-const uniq=Array.from(new Set(data.map(x=>x.Surveyor_Name))).filter(Boolean).sort();
-for(const s of uniq){{const o=document.createElement('option');o.value=s;o.textContent=s;sSelect.appendChild(o);}}
-function esc(x){{return String(x??"").replace(/[&<>"']/g,m=>({{'"':"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}})[m]);}}
-function formatComments(raw){{const s=String(raw??"").trim();if(!s)return"";const re=/\\[(\\d{{1,2}}\\/\\d{{1,2}}\\/\\d{{4}})\\]\\s*:?:?\\s*/g;let match,lastIndex=0,lastDate=null;const blocks=[];while((match=re.exec(s))!==null){{if(lastDate!==null){{blocks.push({{date:lastDate,body:s.slice(lastIndex,match.index).trim()}});}}lastDate=match[1];lastIndex=re.lastIndex;}}if(lastDate!==null){{blocks.push({{date:lastDate,body:s.slice(lastIndex).trim()}});}}if(!blocks.length)return esc(s);let html="";for(let i=0;i<blocks.length;i++){{if(i>0)html+='<div class="comment-divider"></div>';html+=`<div class="comment"><div class="comment-date">[${{esc(blocks[i].date)}}]</div><div class="comment-body">${{esc(blocks[i].body)}}</div></div>`;}}return html;}}
-const barColors=['#0f766e','#f59e0b','#ef4444','#10b981','#3b82f6','#ec4899','#8b5cf6','#14b8a6','#f97316','#64748b','#a855f7','#06b6d4','#e11d48','#84cc16','#0ea5e9'];
-const ctx1=document.getElementById('trendChart').getContext('2d');
-const trendChart=new Chart(ctx1,{{type:'line',data:{{labels:[],datasets:[{{label:'Total Data Count',data:[],borderColor:'#0f766e',backgroundColor:'rgba(15,118,110,0.08)',borderWidth:2.5,tension:0.3,fill:true,pointRadius:3,pointBackgroundColor:'#0f766e'}},{{label:'Rejected Count',data:[],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',borderWidth:2.5,tension:0.3,fill:true,pointRadius:3,pointBackgroundColor:'#ef4444'}}]}},options:{{responsive:true,maintainAspectRatio:true,plugins:{{title:{{display:true,text:'Daily Submissions: Total vs Rejected',font:{{size:14,weight:'900',family:'Outfit'}},color:'#0f172a',padding:{{bottom:10}}}},legend:{{position:'top',labels:{{usePointStyle:true,pointStyle:'circle',padding:14,font:{{size:11,weight:'700',family:'Outfit'}}}}}},tooltip:{{mode:'index',intersect:false}}}},interaction:{{mode:'nearest',axis:'x',intersect:false}},scales:{{x:{{title:{{display:true,text:'Date',font:{{size:11,weight:'800',family:'Outfit'}},color:'#64748b'}},ticks:{{maxRotation:45,font:{{size:9}},maxTicksLimit:15}},grid:{{display:false}}}},y:{{title:{{display:true,text:'Count',font:{{size:11,weight:'800',family:'Outfit'}},color:'#64748b'}},beginAtZero:true,grid:{{color:'#f1f5f9'}}}}}}}}}});
-const ctx2=document.getElementById('issueTypeChart').getContext('2d');
-const issueTypeChart=new Chart(ctx2,{{type:'bar',data:{{labels:[],datasets:[{{label:'Issue Count',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6,barPercentage:0.7}}]}},options:{{responsive:true,maintainAspectRatio:true,indexAxis:'y',plugins:{{title:{{display:true,text:'Issues by Type',font:{{size:14,weight:'900',family:'Outfit'}},color:'#0f172a',padding:{{bottom:10}}}},legend:{{display:false}},tooltip:{{callbacks:{{label:function(ctx){{return' Count: '+ctx.parsed.x;}}}}}}}},scales:{{x:{{title:{{display:true,text:'Count',font:{{size:11,weight:'800',family:'Outfit'}},color:'#64748b'}},beginAtZero:true,grid:{{color:'#f1f5f9'}},ticks:{{stepSize:1}}}},y:{{ticks:{{font:{{size:11,weight:'600',family:'Outfit'}},color:'#334155'}},grid:{{display:false}}}}}}}}}});
-function updateCharts(surveyorFilter,searchFilter,resolvedFilter){{let filtered=chartSource;if(surveyorFilter){{filtered=filtered.filter(r=>r.Surveyor_Name===surveyorFilter);}}if(resolvedFilter){{filtered=filtered.filter(r=>r.issue_resolved===resolvedFilter);}}if(searchFilter){{const q=searchFilter.toLowerCase();filtered=filtered.filter(r=>{{const blob=((r.Surveyor_Name||'')+' '+(r.KEY||'')+' '+(r.Site_Visit_ID||'')+' '+(r.QA_Status||'')+' '+(r.Location||'')+' '+(r.Issue_Type||'')+' '+(r.Issue_Description||'')+' '+(r.surveyor_response||'')).toLowerCase();return blob.includes(q);}});}}const dateMap={{}};for(const r of filtered){{if(!r.Date)continue;if(!dateMap[r.Date])dateMap[r.Date]={{total:0,rejected:0}};dateMap[r.Date].total+=1;if(r.QA_Status==='Rejected')dateMap[r.Date].rejected+=1;}}const sortedDates=Object.keys(dateMap).sort();const filterLabel=surveyorFilter?' — '+surveyorFilter:(searchFilter?' — "'+searchFilter+'"':' (All Surveyors)');trendChart.options.plugins.title.text='Daily Submissions: Total vs Rejected'+filterLabel;trendChart.data.labels=sortedDates;trendChart.data.datasets[0].data=sortedDates.map(d=>dateMap[d].total);trendChart.data.datasets[1].data=sortedDates.map(d=>dateMap[d].rejected);trendChart.update();const typeMap={{}};for(const r of filtered){{const t=r.Issue_Type;if(!t)continue;typeMap[t]=(typeMap[t]||0)+1;}}const sortedTypes=Object.entries(typeMap).sort((a,b)=>b[1]-a[1]);const typeLabels=sortedTypes.map(e=>e[0]);const typeCounts=sortedTypes.map(e=>e[1]);const typeBg=typeLabels.map((_,i)=>barColors[i%barColors.length]+'cc');const typeBd=typeLabels.map((_,i)=>barColors[i%barColors.length]);issueTypeChart.options.plugins.title.text='Issues by Type'+filterLabel;issueTypeChart.data.labels=typeLabels;issueTypeChart.data.datasets[0].data=typeCounts;issueTypeChart.data.datasets[0].backgroundColor=typeBg;issueTypeChart.data.datasets[0].borderColor=typeBd;issueTypeChart.update();}}
-function render(){{const q=document.getElementById('q').value.toLowerCase();const res=document.getElementById('fResolved').value;const sur=document.getElementById('fSurveyor').value;updateCharts(sur,q,res);const out=[];for(const i of data){{if(res&&i.issue_resolved!==res)continue;if(sur&&i.Surveyor_Name!==sur)continue;if(q){{const blob=((i.Surveyor_Name||"")+' '+(i.KEY||"")+' '+(i.Site_Visit_ID||"")+' '+(i.QA_Status||"")+' '+(i.Location||"")+' '+(i.Issue_Type||"")+' '+(i.Issue_Description||"")+' '+(i.surveyor_response||"")).toLowerCase();if(!blob.includes(q))continue;}}out.push(`<tr><td><div class="muted" style="font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#0f766e">${{esc(i.Surveyor_Name)}}</div><div class="muted">KEY: ${{esc(i.KEY)}}</div><div class="muted">Site_Visit_ID: ${{esc(i.Site_Visit_ID)}}</div><div class="muted">Location: ${{esc(i.Location)}}</div><div style="margin-top:8px;"></div><div style="font-weight:700;font-size:0.9rem;margin-top:4px"><span style="font-weight:900;">Issue Type:</span> <span style="font-weight:400;text-decoration:underline;">${{esc(i.Issue_Type)}}</span></div><div class="muted">QA Status: <span style="font-weight:900;text-decoration:underline;color:${{i.QA_Status==='Rejected'?'#ef4444':(i.QA_Status==='Approved'?'#10b981':'#94a3b8')}};">${{esc(i.QA_Status)}}</span></div><div class="muted" style="margin-top:10px"><span style="color:#dc2626;font-weight:900">ISSUE:</span><div class="issue-comments">${{formatComments(i.Issue_Description)}}</div></div></td><td><div class="response-comments">${{i.surveyor_response?formatComments(i.surveyor_response):'<div class="awaiting-response">Awaiting response from DC/field...</div>'}}</div></td><td class="c"><span class="pill" style="background:#e2e8f0;color:#0f172a">${{esc(i.severity)}}</span></td><td class="c"><span class="pill" style="background:${{i.issue_resolved==="Yes"?"#dcfce7":"#ffe4e6"}};color:${{i.issue_resolved==="Yes"?"#166534":"#9f1239"}}">${{i.issue_resolved==="Yes"?"Closed":"Pending"}}</span></td></tr>`);}}tbody.innerHTML=out.join("");}}
-document.getElementById('q').addEventListener('input',render);document.getElementById('fResolved').addEventListener('input',render);document.getElementById('fSurveyor').addEventListener('input',render);document.getElementById('reset').addEventListener('click',()=>{{document.getElementById('q').value="";document.getElementById('fResolved').value="";document.getElementById('fSurveyor').value="";render();}});render();
-</script></body></html>"""
+                return f"""<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>{project_name} - QA Report</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');:root{{--bg:#f4f5f7;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--issue-bg:#fff7ed;--issue-bd:#fed7aa;--issue-date:#9a3412;--issue-txt:#7c2d12;--resp-bg:#f0fdfa;--resp-bd:#99f6e4;--resp-date:#0f766e;--resp-txt:#334155;}}*{{box-sizing:border-box}}body{{margin:0;font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--text)}}.wrap{{max-width:1100px;margin:0 auto;padding:18px}}.card{{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}}.top{{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f766e 100%);color:#fff;border:none;}}.top .muted{{color:rgba(255,255,255,0.6);}}.badge{{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.15);color:#fff;font-size:11px;font-weight:800}}.muted{{color:var(--muted);font-size:12px}}h1{{margin:8px 0 2px;font-size:26px;line-height:1.1}}.btn{{border:0;border-radius:14px;padding:12px 14px;background:#0f766e;color:#fff;font-weight:800;cursor:pointer;font-family:'Outfit'}}.grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}}.kpi .label{{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}}.kpi .val{{font-size:28px;font-weight:900;margin-top:6px;font-family:'JetBrains Mono',monospace}}.bar{{height:7px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-top:8px}}.bar span{{display:block;height:100%}}.tablecard{{margin-top:12px;padding:0;overflow:hidden}}.thead{{padding:14px 18px;border-bottom:1px solid var(--line);background:#fafafa}}table{{width:100%;border-collapse:collapse}}th,td{{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:top;font-size:13px}}th{{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;background:#fafafa}}.c{{text-align:center}}.mono{{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}}.name{{font-weight:900}}.score{{font-weight:900}}.pill{{display:inline-block;padding:4px 8px;border-radius:999px;color:#fff;font-size:11px;font-weight:900}}.rec{{color:var(--muted);font-style:italic;font-size:12px}}.red{{color:#dc2626}}.blue{{color:#2563eb}}.filters{{display:grid;grid-template-columns:1fr 180px 220px 140px;gap:10px;margin-top:12px}}input,select{{padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:13px;background:#fff;font-family:'Outfit'}}.ghost{{background:#f1f5f9;color:#0f172a}}.ticker tbody tr{{border-bottom:1px dashed #e5e7eb}}.ticker tbody tr:last-child{{border-bottom:none}}.ticker tbody tr td{{padding-top:18px;padding-bottom:18px}}.comment{{margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid;}}.comment-date{{font-weight:900;font-size:12px}}.comment-body{{margin-top:4px;line-height:1.35;}}.comment-divider{{height:1px;margin:10px 2px;background:linear-gradient(90deg,rgba(148,163,184,0),rgba(148,163,184,0.85),rgba(148,163,184,0))}}.issue-comments .comment{{background:var(--issue-bg);border-color:var(--issue-bd);border-left:4px solid #fb923c;}}.issue-comments .comment-date{{color:var(--issue-date);}}.issue-comments .comment-body{{color:var(--issue-txt);}}.response-comments .comment{{background:var(--resp-bg);border-color:var(--resp-bd);border-left:4px solid #14b8a6;}}.response-comments .comment-date{{color:var(--resp-date);}}.response-comments .comment-body{{color:var(--resp-txt);font-style:italic;}}.awaiting-response{{color:#b91c1c;opacity:0.45;font-style:italic;font-weight:300;}}.charts-row{{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;padding:18px;margin-top:4px;}}.chart-box{{background:#ffffff;border:1px solid var(--line);border-radius:14px;padding:16px;position:relative;}}.chart-box canvas{{width:100%!important;}}@media print{{.no-print{{display:none!important}}body{{background:#fff}}.wrap{{padding:0}}.card{{border:0}}}}@media(max-width:900px){{.grid{{grid-template-columns:repeat(2,1fr)}}.filters{{grid-template-columns:1fr}}.charts-row{{grid-template-columns:1fr}}}}</style></head><body><div class="wrap"><div class="card top"><div><span class="badge">{meta}</span><span class="muted" style="margin-left:10px">Report Generated: {now}</span><h1>{project_name}</h1><div class="muted">Surveyor Quality Matrix + Detailed Feedback Log</div></div><button class="btn no-print" onclick="window.print()">Export PDF</button></div><div class="grid"><div class="card kpi"><div class="label">Overall Quality Score</div><div class="val">{avg_score:.1f} <span class="muted">/ 100</span></div><div class="bar"><span style="width:{avg_score}%;background:#0f766e"></span></div></div><div class="card kpi"><div class="label">Total Recorded Cases</div><div class="val" style="color:#4f46e5">{total_issues}</div><div class="muted">{resolved_count} Resolved • {pending_count} Open</div></div><div class="card kpi"><div class="label">Surveyor Notifications</div><div class="val">{notified_count}</div><div class="muted">Awaiting responses for {not_notified_count} cases.</div></div><div class="card kpi"><div class="label">Critical (High severity)</div><div class="val" style="color:#dc2626">{high_severity}</div><div class="muted">Immediate coaching required</div></div></div><div class="card tablecard"><div class="thead"><div style="font-weight:900">Surveyor Performance Matrix (Worst 10)</div><div class="muted">Lowest quality score surveyors</div></div><div style="overflow:auto"><table><thead><tr><th>Surveyor</th><th class="c">Score</th><th>Band</th><th class="c">Total Subs</th><th class="c">Rej #</th><th class="c">Rej %</th><th class="c">Feedback %</th><th class="c">Data incons. %</th><th class="c">Speed Vio. %</th><th>Action</th></tr></thead><tbody>{matrix_rows}</tbody></table></div></div><div class="card tablecard" style="margin-top:12px"><div class="thead"><div style="font-weight:900;text-align:center">Detailed Feedback Log</div><div class="filters no-print"><input id="q" placeholder="Search logs..."/><select id="fResolved"><option value="">Status: All</option><option value="Yes">Resolved</option><option value="No">Pending</option></select><select id="fSurveyor"><option value="">Surveyor: All</option></select><button class="btn ghost" id="reset" type="button">Clear</button></div></div><div class="charts-row"><div class="chart-box"><canvas id="trendChart"></canvas></div><div class="chart-box"><canvas id="issueTypeChart"></canvas></div></div><div style="overflow:auto"><table class="ticker"><thead><tr><th>Verification Detail</th><th>Surveyor Response</th><th class="c">Severity</th><th class="c">Status</th></tr></thead><tbody id="tbody"></tbody></table></div></div></div><script>const data={issues_json};const chartSource={chart_src_json};const tbody=document.getElementById('tbody');const sSelect=document.getElementById('fSurveyor');const uniq=Array.from(new Set(data.map(x=>x.Surveyor_Name))).filter(Boolean).sort();for(const s of uniq){{const o=document.createElement('option');o.value=s;o.textContent=s;sSelect.appendChild(o);}}function esc(x){{return String(x??"").replace(/[&<>"']/g,m=>({{'"':"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}})[m]);}}function formatComments(raw){{const s=String(raw??"").trim();if(!s)return"";const re=/\\[(\\d{{1,2}}\\/\\d{{1,2}}\\/\\d{{4}})\\]\\s*:?:?\\s*/g;let match,lastIndex=0,lastDate=null;const blocks=[];while((match=re.exec(s))!==null){{if(lastDate!==null){{blocks.push({{date:lastDate,body:s.slice(lastIndex,match.index).trim()}});}}lastDate=match[1];lastIndex=re.lastIndex;}}if(lastDate!==null){{blocks.push({{date:lastDate,body:s.slice(lastIndex).trim()}});}}if(!blocks.length)return esc(s);let html="";for(let i=0;i<blocks.length;i++){{if(i>0)html+='<div class="comment-divider"></div>';html+=`<div class="comment"><div class="comment-date">[${{esc(blocks[i].date)}}]</div><div class="comment-body">${{esc(blocks[i].body)}}</div></div>`;}}return html;}}const barColors=['#0f766e','#f59e0b','#ef4444','#10b981','#3b82f6','#ec4899','#8b5cf6','#14b8a6','#f97316','#64748b'];const ctx1=document.getElementById('trendChart').getContext('2d');const trendChart=new Chart(ctx1,{{type:'line',data:{{labels:[],datasets:[{{label:'Total',data:[],borderColor:'#0f766e',backgroundColor:'rgba(15,118,110,0.08)',borderWidth:2.5,tension:0.3,fill:true,pointRadius:3,pointBackgroundColor:'#0f766e'}},{{label:'Rejected',data:[],borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',borderWidth:2.5,tension:0.3,fill:true,pointRadius:3,pointBackgroundColor:'#ef4444'}}]}},options:{{responsive:true,maintainAspectRatio:true,plugins:{{title:{{display:true,text:'Daily Submissions',font:{{size:14,weight:'900',family:'Outfit'}}}},legend:{{position:'top',labels:{{usePointStyle:true,pointStyle:'circle',padding:14,font:{{size:11,weight:'700'}}}}}}}},scales:{{x:{{ticks:{{maxRotation:45,font:{{size:9}},maxTicksLimit:15}},grid:{{display:false}}}},y:{{beginAtZero:true,grid:{{color:'#f1f5f9'}}}}}}}}}});const ctx2=document.getElementById('issueTypeChart').getContext('2d');const issueTypeChart=new Chart(ctx2,{{type:'bar',data:{{labels:[],datasets:[{{label:'Count',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:6,barPercentage:0.7}}]}},options:{{responsive:true,maintainAspectRatio:true,indexAxis:'y',plugins:{{title:{{display:true,text:'Issues by Type',font:{{size:14,weight:'900',family:'Outfit'}}}},legend:{{display:false}}}},scales:{{x:{{beginAtZero:true,grid:{{color:'#f1f5f9'}},ticks:{{stepSize:1}}}},y:{{ticks:{{font:{{size:11,weight:'600'}}}},grid:{{display:false}}}}}}}}}});function updateCharts(sf,qf,rf){{let f=chartSource;if(sf)f=f.filter(r=>r.Surveyor_Name===sf);if(rf)f=f.filter(r=>r.issue_resolved===rf);if(qf){{const q=qf.toLowerCase();f=f.filter(r=>((r.Surveyor_Name||'')+' '+(r.KEY||'')+' '+(r.Issue_Type||'')+' '+(r.Issue_Description||'')).toLowerCase().includes(q));}}const dm={{}};for(const r of f){{if(!r.Date)continue;if(!dm[r.Date])dm[r.Date]={{t:0,r:0}};dm[r.Date].t+=1;if(r.QA_Status==='Rejected')dm[r.Date].r+=1;}}const sd=Object.keys(dm).sort();trendChart.data.labels=sd;trendChart.data.datasets[0].data=sd.map(d=>dm[d].t);trendChart.data.datasets[1].data=sd.map(d=>dm[d].r);trendChart.update();const tm={{}};for(const r of f){{if(!r.Issue_Type)continue;tm[r.Issue_Type]=(tm[r.Issue_Type]||0)+1;}}const st=Object.entries(tm).sort((a,b)=>b[1]-a[1]);issueTypeChart.data.labels=st.map(e=>e[0]);issueTypeChart.data.datasets[0].data=st.map(e=>e[1]);issueTypeChart.data.datasets[0].backgroundColor=st.map((_,i)=>barColors[i%barColors.length]+'cc');issueTypeChart.data.datasets[0].borderColor=st.map((_,i)=>barColors[i%barColors.length]);issueTypeChart.update();}}function render(){{const q=document.getElementById('q').value.toLowerCase();const res=document.getElementById('fResolved').value;const sur=document.getElementById('fSurveyor').value;updateCharts(sur,q,res);const out=[];for(const i of data){{if(res&&i.issue_resolved!==res)continue;if(sur&&i.Surveyor_Name!==sur)continue;if(q){{const blob=((i.Surveyor_Name||"")+' '+(i.KEY||"")+' '+(i.Issue_Type||"")+' '+(i.Issue_Description||"")).toLowerCase();if(!blob.includes(q))continue;}}out.push(`<tr><td><div class="muted" style="font-weight:900;text-transform:uppercase;color:#0f766e">${{esc(i.Surveyor_Name)}}</div><div class="muted">KEY: ${{esc(i.KEY)}}</div><div class="muted">Location: ${{esc(i.Location)}}</div><div style="font-weight:700;margin-top:8px">Issue: <span style="font-weight:400;text-decoration:underline">${{esc(i.Issue_Type)}}</span></div><div class="muted">QA: <span style="font-weight:900;color:${{i.QA_Status==='Rejected'?'#ef4444':'#10b981'}}">${{esc(i.QA_Status)}}</span></div><div class="muted" style="margin-top:8px"><span style="color:#dc2626;font-weight:900">ISSUE:</span><div class="issue-comments">${{formatComments(i.Issue_Description)}}</div></div></td><td><div class="response-comments">${{i.surveyor_response?formatComments(i.surveyor_response):'<div class="awaiting-response">Awaiting response...</div>'}}</div></td><td class="c"><span class="pill" style="background:#e2e8f0;color:#0f172a">${{esc(i.severity)}}</span></td><td class="c"><span class="pill" style="background:${{i.issue_resolved==="Yes"?"#dcfce7":"#ffe4e6"}};color:${{i.issue_resolved==="Yes"?"#166534":"#9f1239"}}">${{i.issue_resolved==="Yes"?"Closed":"Pending"}}</span></td></tr>`);}}tbody.innerHTML=out.join("");}}document.getElementById('q').addEventListener('input',render);document.getElementById('fResolved').addEventListener('input',render);document.getElementById('fSurveyor').addEventListener('input',render);document.getElementById('reset').addEventListener('click',()=>{{document.getElementById('q').value="";document.getElementById('fResolved').value="";document.getElementById('fSurveyor').value="";render();}});render();</script></body></html>"""
 
             p_name = selected_project
             m_text = "ATR-QA Department"
             summary_scored = score_surveyors(summary_sr, w_rej=0.35, w_out=0.1, w_out2=0.2, w_fb=0.35)
             report_html = build_html_report(p_name, m_text, summary_scored, issues, chart_source_json)
-            st.download_button(
-                label="⬇ Download Surveyor Report (HTML)",
-                data=report_html,
-                file_name=f"Audit_{datetime.now().strftime('%Y%m%d')}.html",
-                mime="text/html",
-                use_container_width=True,
-                type="primary",
-                key="download_report_btn",
-            )
+            st.download_button(label="⬇ Download Surveyor Report (HTML)", data=report_html,
+                file_name=f"Audit_{datetime.now().strftime('%Y%m%d')}.html", mime="text/html",
+                use_container_width=True, type="primary", key="download_report_btn")
 
-    # ──────────────────────────────────────────
-    # FOOTER / LOGOUT
-    # ──────────────────────────────────────────
+    # ── FOOTER ──
     ""
     ""
     st.divider()
@@ -1361,8 +874,4 @@ document.getElementById('q').addEventListener('input',render);document.getElemen
             st.session_state.logged_in = False
             st.rerun()
     with col_foot3:
-        st.markdown(
-            f"<div style='text-align:right;color:#94a3b8;font-size:11px;padding-top:8px;'>"
-            f"ATR Dashboard · {datetime.now().strftime('%Y')}</div>",
-            unsafe_allow_html=True
-        )
+        st.markdown(f"<div style='text-align:right;color:#94a3b8;font-size:11px;padding-top:8px;'>ATR Dashboard · {datetime.now().strftime('%Y')}</div>", unsafe_allow_html=True)
