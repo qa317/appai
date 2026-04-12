@@ -536,50 +536,52 @@ if st.session_state.logged_in:
 
         tool_names = project_data_tools['Tool'].unique()
         coll1, coll2, coll3 = st.columns(3)
+
+        with st.spinner('Loading/refreshing project data...'):
+          missing = pd.DataFrame(columns=['Tool','V_ID','KEY','Type','QA_Status'])
+          rawsheet = project_data['raw_sheet'][0]
+          Project_QA_ID = project_data['Sampling_ID'][0]
+          Project_QA_ID2 = project_data['QAlog_ID'][0]
+          Project_QA_ID3 = project_data['HFC_ID'][0]
+          raw_sheet_id = rawsheet.split('/d/')[1].split('/')[0]
+          csv_url_raw = f"https://docs.google.com/spreadsheets/d/{raw_sheet_id}/export?format=csv&id={raw_sheet_id}&gid=0"
+          t = pd.read_csv(csv_url_raw)
+          t['KEY_Unique'] = t['KEY']
+  
+          qasheet = "https://docs.google.com/spreadsheets/d/1V1SfBZUwHN0NtXFIoiXEh7JGkpTUOLZnGAfFN8QVXYQ/export?format=csv&" + Project_QA_ID2
+          qalog = pd.read_csv(qasheet)
+          t = pd.merge(t, qalog[['QA_Status','KEY_Unique']].drop_duplicates('KEY_Unique'), on='KEY_Unique', how='left')
+          t['QA_Status'] = t['QA_Status'].replace('', "Not QA'ed Yet")
+          t['QA_Status'] = t['QA_Status'].fillna("Not QA'ed Yet")
+  
+          extra_code = project_data['extra_code'][0]
+          Add_cols = project_data_tools['Add_columns'][0]
+          t['Completion_status'] = 'Complete'
+          if extra_code != '-':
+              exec(extra_code)
+          t['SubmissionDate'] = pd.to_datetime(t['SubmissionDate'], errors='coerce')
+          t = t.sort_values(by=['Completion_status', 'QA_Status'], ascending=True)
+  
+          t['occurance'] = None
+          for tool, cols in tool_col_map.items():
+              group_cols = [c for c in cols.split('-') if c != 'occurance']
+              mask = t['Tool'] == tool
+              t.loc[mask, 'occurance'] = t.loc[mask].groupby(group_cols).cumcount() + 1
+          t['occurance'] = t['occurance'].fillna(9999).astype(int)
+          t['V_ID'] = t.apply(compute_vid, axis=1)
+  
+          samplingsheet = "https://docs.google.com/spreadsheets/d/1U0Y7TQnTFEg1edMb0IHejOxv9S2YLY2UH-tp1qzXyBg/export?format=csv&" + Project_QA_ID
+          tari = pd.read_csv(samplingsheet)
+          tari['V_ID'] = tari['Tool'] + "/" + tari['V_ID']
+          tari = tari[tari['Skipped'] != "Yes"]
+          tari = tari[(tari["Tool"].isin(t["Tool"].unique())) & (tari["Tool"].isin(project_data_tools["Tool"]))]
+          df_free = t[t["Tool"].isin(project_data_tools["Tool"]) & ~t["Tool"].isin(tari["Tool"])].copy()
+          df_free = df_free.drop(columns=["KEY", "QA_Status"], errors='ignore')
+          df_free = df_free[tari.columns.intersection(df_free.columns)]
+          tari = pd.concat([tari, df_free], ignore_index=True)
+
         with coll1:
             selected_tool = st.multiselect('Tool', tool_names, default=None)
-
-        missing = pd.DataFrame(columns=['Tool','V_ID','KEY','Type','QA_Status'])
-        rawsheet = project_data['raw_sheet'][0]
-        Project_QA_ID = project_data['Sampling_ID'][0]
-        Project_QA_ID2 = project_data['QAlog_ID'][0]
-        Project_QA_ID3 = project_data['HFC_ID'][0]
-        raw_sheet_id = rawsheet.split('/d/')[1].split('/')[0]
-        csv_url_raw = f"https://docs.google.com/spreadsheets/d/{raw_sheet_id}/export?format=csv&id={raw_sheet_id}&gid=0"
-        t = pd.read_csv(csv_url_raw)
-        t['KEY_Unique'] = t['KEY']
-
-        qasheet = "https://docs.google.com/spreadsheets/d/1V1SfBZUwHN0NtXFIoiXEh7JGkpTUOLZnGAfFN8QVXYQ/export?format=csv&" + Project_QA_ID2
-        qalog = pd.read_csv(qasheet)
-        t = pd.merge(t, qalog[['QA_Status','KEY_Unique']].drop_duplicates('KEY_Unique'), on='KEY_Unique', how='left')
-        t['QA_Status'] = t['QA_Status'].replace('', "Not QA'ed Yet")
-        t['QA_Status'] = t['QA_Status'].fillna("Not QA'ed Yet")
-
-        extra_code = project_data['extra_code'][0]
-        Add_cols = project_data_tools['Add_columns'][0]
-        t['Completion_status'] = 'Complete'
-        if extra_code != '-':
-            exec(extra_code)
-        t['SubmissionDate'] = pd.to_datetime(t['SubmissionDate'], errors='coerce')
-        t = t.sort_values(by=['Completion_status', 'QA_Status'], ascending=True)
-
-        t['occurance'] = None
-        for tool, cols in tool_col_map.items():
-            group_cols = [c for c in cols.split('-') if c != 'occurance']
-            mask = t['Tool'] == tool
-            t.loc[mask, 'occurance'] = t.loc[mask].groupby(group_cols).cumcount() + 1
-        t['occurance'] = t['occurance'].fillna(9999).astype(int)
-        t['V_ID'] = t.apply(compute_vid, axis=1)
-
-        samplingsheet = "https://docs.google.com/spreadsheets/d/1U0Y7TQnTFEg1edMb0IHejOxv9S2YLY2UH-tp1qzXyBg/export?format=csv&" + Project_QA_ID
-        tari = pd.read_csv(samplingsheet)
-        tari['V_ID'] = tari['Tool'] + "/" + tari['V_ID']
-        tari = tari[tari['Skipped'] != "Yes"]
-        tari = tari[(tari["Tool"].isin(t["Tool"].unique())) & (tari["Tool"].isin(project_data_tools["Tool"]))]
-        df_free = t[t["Tool"].isin(project_data_tools["Tool"]) & ~t["Tool"].isin(tari["Tool"])].copy()
-        df_free = df_free.drop(columns=["KEY", "QA_Status"], errors='ignore')
-        df_free = df_free[tari.columns.intersection(df_free.columns)]
-        tari = pd.concat([tari, df_free], ignore_index=True)
 
         if selected_tool:
             t = t[t.Tool.isin(selected_tool)]
