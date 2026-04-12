@@ -2,21 +2,16 @@
 base = "light"
 
 # General color setup
-textColor = "#0f172a"
-primaryColor = "#0f766e"
-backgroundColor = "#f4f5f7"
+textColor = "#1c1919"
+primaryColor = "#0f766e"  # Matching your ATR brand accent
+backgroundColor = "#fafafa"
 secondaryBackgroundColor = "#ffffff"
 
 # Widgets
 showWidgetBorder = true
-borderColor = "#e2e8f0"
+borderColor = "#e7e3e4"
 
 # Base text
-font = "'Outfit':https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+font = "'Open Sans':https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
 baseFontWeight = 400
 baseFontSize = 14
-
-# Heading text
-headingFont = "'Outfit':https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
-headingFontWeights = [700, 300, 700]
-headingFontSizes = ["2.5rem", "1.75rem", "1rem"]
