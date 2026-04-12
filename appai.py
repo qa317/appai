@@ -532,7 +532,8 @@ if st.session_state.logged_in:
             please refer to the Document field. Relevant datasets and trackers are also available.</p>
         </div>""", unsafe_allow_html=True)
     else:
-
+    
+        st.markdown('<div class="section-title">Data Metrics</div>', unsafe_allow_html=True)
         with st.spinner('Loading/refreshing project data...'):
           missing = pd.DataFrame(columns=['Tool','V_ID','KEY','Type','QA_Status'])
           rawsheet = project_data['raw_sheet'][0]
@@ -576,8 +577,6 @@ if st.session_state.logged_in:
           df_free = df_free[tari.columns.intersection(df_free.columns)]
           tari = pd.concat([tari, df_free], ignore_index=True)
 
-
-        st.markdown('<div class="section-title">Data Metrics</div>', unsafe_allow_html=True)
 
         tool_names = project_data_tools['Tool'].unique()
         coll1, coll2, coll3 = st.columns(3)
