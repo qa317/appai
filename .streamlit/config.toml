@@ -1,17 +1,19 @@
 [theme]
 base = "light"
-
-# General color setup
-textColor = "#1c1919"
-primaryColor = "#0f766e"  # Matching your ATR brand accent
-backgroundColor = "#fafafa"
+primaryColor = "#00b894"
+backgroundColor = "#f6f7fb"
 secondaryBackgroundColor = "#ffffff"
-
-# Widgets
+textColor = "#142033"
+borderColor = "#e7eaf3"
 showWidgetBorder = true
-borderColor = "#e7e3e4"
-
-# Base text
-font = "'Open Sans':https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
-baseFontWeight = 400
+baseRadius = "1rem"
+font = "'Open Sans':https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap"
 baseFontSize = 14
+baseFontWeight = 400
+headingFont = "'Open Sans':https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap"
+headingFontWeights = [800, 700, 700]
+headingFontSizes = ["2.9rem", "2rem", "1.1rem"]
+
+[client]
+showSidebarNavigation = false
+toolbarMode = "minimal"
