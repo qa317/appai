@@ -1,0 +1,22 @@
+[theme]
+base = "light"
+
+# General color setup
+textColor = "#0f172a"
+primaryColor = "#0f766e"
+backgroundColor = "#fafafa"
+secondaryBackgroundColor = "#ffffff"
+
+# Widgets
+showWidgetBorder = true
+borderColor = "#e2e8f0"
+
+# Base text
+font = "'Outfit':https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+baseFontWeight = 400
+baseFontSize = 14
+
+# Heading text
+headingFont = "'Outfit':https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+headingFontWeights = [700, 300, 700]
+headingFontSizes = ["2.5rem", "1.75rem", "1rem"]
