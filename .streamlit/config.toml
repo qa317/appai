@@ -1,19 +1,22 @@
 [theme]
 base = "light"
-primaryColor = "#00b894"
-backgroundColor = "#f6f7fb"
-secondaryBackgroundColor = "#ffffff"
-textColor = "#142033"
-borderColor = "#e7eaf3"
-showWidgetBorder = true
-baseRadius = "1rem"
-font = "'Open Sans':https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap"
-baseFontSize = 14
-baseFontWeight = 400
-headingFont = "'Open Sans':https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap"
-headingFontWeights = [800, 700, 700]
-headingFontSizes = ["2.9rem", "2rem", "1.1rem"]
 
-[client]
-showSidebarNavigation = false
-toolbarMode = "minimal"
+# General color setup
+textColor = "#0f172a"
+primaryColor = "#0f766e"
+backgroundColor = "#f4f5f7"
+secondaryBackgroundColor = "#ffffff"
+
+# Widgets
+showWidgetBorder = true
+borderColor = "#e2e8f0"
+
+# Base text
+font = "'Outfit':https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+baseFontWeight = 400
+baseFontSize = 14
+
+# Heading text
+headingFont = "'Outfit':https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+headingFontWeights = [700, 300, 700]
+headingFontSizes = ["2.5rem", "1.75rem", "1rem"]
