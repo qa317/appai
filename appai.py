@@ -7,6 +7,7 @@ import json
 from datetime import datetime
 import streamlit.components.v1 as components
 from streamlit_folium import st_folium
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import copy
 import re
 import numpy as np
@@ -204,7 +205,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVertica
 
 /* Streamlit Overrides */
 .stSelectbox label, .stMultiSelect label { font-size: 12px !important; font-weight: 700 !important; color: var(--text-muted) !important; text-transform: uppercase; letter-spacing: 0.06em; }
-.stDataFrame { border-radius: 14px !important; overflow: vissible; box-shadow: var(--shadow) !important; background: var(--glass) !important; }
+.stDataFrame { border-radius: 14px !important; overflow: hidden; box-shadow: var(--shadow) !important; background: var(--glass) !important; }
 div[data-testid="stExpander"] { border: 1px solid var(--border) !important; border-radius: 16px !important; overflow: hidden; background: var(--glass) !important; backdrop-filter: blur(6px) !important; }
 div[data-testid="stExpander"] summary { font-weight: 700 !important; }
 .stDownloadButton button { border-radius: 12px !important; font-weight: 600 !important; }
@@ -745,7 +746,12 @@ if st.session_state.logged_in:
 
         # ── SAMPLE TRACKING TABLE ──
         st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
-        st.dataframe(data_metrics, hide_index=True, use_container_width=True)
+        gb = GridOptionsBuilder.from_dataframe(data_metrics)
+        gb.configure_default_column(filterable=True, sortable=True, resizable=True)
+        gb.configure_grid_options(domLayout='autoHeight')
+        AgGrid(data_metrics, gridOptions=gb.build(), height=min(400, 56 + 35 * len(data_metrics)),
+            update_mode=GridUpdateMode.NO_UPDATE, fit_columns_on_grid_load=True,
+            theme="streamlit", key="sample_tracking_grid")
 
         # ── GEOGRAPHIC COVERAGE + SUBMISSION TIMELINE ──
         colii1, colii2 = st.columns(2)
