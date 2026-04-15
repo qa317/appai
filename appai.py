@@ -115,35 +115,25 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVertica
 @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
 .kpi-tile {
   background: var(--glass); backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-border); border-radius: 18px;
-  padding: 22px 24px; position: relative; overflow: hidden;
+  border: 1px solid var(--glass-border); border-radius: 16px;
+  padding: 20px 22px;
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.kpi-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-.kpi-tile .kpi-tile-icon {
-  width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; margin-bottom: 14px;
-}
+.kpi-tile:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 .kpi-tile .kpi-tile-label {
   font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;
+  letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px;
 }
 .kpi-tile .kpi-tile-value {
-  font-size: 32px; font-weight: 900; line-height: 1;
+  font-size: 30px; font-weight: 900; line-height: 1;
   font-family: 'JetBrains Mono', monospace; letter-spacing: -1.5px;
 }
 .kpi-tile .kpi-tile-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
 .kpi-tile .kpi-tile-bar {
-  height: 5px; background: #e2e8f0; border-radius: 99px;
-  overflow: hidden; margin-top: 12px;
+  height: 4px; background: #e2e8f0; border-radius: 99px;
+  overflow: hidden; margin-top: 10px;
 }
 .kpi-tile .kpi-tile-bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(.22,.61,.36,1); }
-.kpi-tile .kpi-tile-ring {
-  position: absolute; top: -20px; right: -20px;
-  width: 80px; height: 80px; border-radius: 50%;
-  opacity: 0.06;
-}
 
 /* Link Grid */
 .links-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
@@ -284,18 +274,25 @@ if not st.session_state.logged_in:
 # ──────────────────────────────────────────────
 if st.session_state.logged_in:
 
-    st.markdown(f"""
-    <div class="hero-banner">
-        <div>
-            <h1>Data Collection & QA Dashboard</h1>
-            <div class="hero-sub">ATR Consulting · Progress Tracker</div>
+    col_hero, col_logout = st.columns([11, 1])
+    with col_hero:
+        st.markdown(f"""
+        <div class="hero-banner">
+            <div>
+                <h1>Data Collection & QA Dashboard</h1>
+                <div class="hero-sub">ATR Consulting · Progress Tracker</div>
+            </div>
+            <div class="hero-badge">
+                <span class="dot"></span>
+                {st.session_state.username}
+            </div>
         </div>
-        <div class="hero-badge">
-            <span class="dot"></span>
-            {st.session_state.username}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    with col_logout:
+        st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
+        if st.button("🚪", key="logout_top", help="Logout"):
+            st.session_state.logged_in = False
+            st.rerun()
 
     st.toast("Press **R** to refresh · Figures include both complete and incomplete data by default.")
 
@@ -379,7 +376,7 @@ if st.session_state.logged_in:
                     hovertemplate=f"<b>{project}</b><br>{phase}<br>Actual: {a_s:%d-%b-%Y} → {actual_end:%d-%b-%Y}{' (running)' if is_running else ''}<extra></extra>"))
                 if is_running:
                     fig.add_annotation(x=actual_end, y=y, text="<b>↝</b>", showarrow=False,
-                        xanchor="left", yanchor="middle", font=dict(size=22, color="#0f766e"), bgcolor="rgba(255,255,255,0.6)")
+                        xanchor="left", yanchor="middle", font=dict(size=22, color="#0f766e"), bgcolor="rgba(0,0,0,0)")
                 if not is_running:
                     d = delay_days(pe, a_e)
                     if d > 0:
@@ -667,32 +664,24 @@ if st.session_state.logged_in:
         # ── 4 KPIs in horizontal row ──
         st.markdown(f"""<div class="kpi-row">
             <div class="kpi-tile">
-                <div class="kpi-tile-ring" style="background:#0f766e;"></div>
-                <div class="kpi-tile-icon" style="background:rgba(15,118,110,0.1);color:#0f766e;">📥</div>
                 <div class="kpi-tile-label">DC Progress</div>
                 <div class="kpi-tile-value" style="color:#0f766e;">{dc_pct}%</div>
                 <div class="kpi-tile-sub">{total_received} of {total_target} received</div>
                 <div class="kpi-tile-bar"><div class="kpi-tile-bar-fill" style="width:{dc_pct}%;background:linear-gradient(90deg,#0f766e,#14b8a6);"></div></div>
             </div>
             <div class="kpi-tile">
-                <div class="kpi-tile-ring" style="background:#10b981;"></div>
-                <div class="kpi-tile-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">✓</div>
                 <div class="kpi-tile-label">QA Approved</div>
                 <div class="kpi-tile-value" style="color:#10b981;">{approved_n}</div>
                 <div class="kpi-tile-sub">{qa_pct}% approval rate</div>
                 <div class="kpi-tile-bar"><div class="kpi-tile-bar-fill" style="width:{qa_pct}%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
             </div>
             <div class="kpi-tile">
-                <div class="kpi-tile-ring" style="background:#ef4444;"></div>
-                <div class="kpi-tile-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">✕</div>
                 <div class="kpi-tile-label">Rejected</div>
                 <div class="kpi-tile-value" style="color:#ef4444;">{rejected_n}</div>
                 <div class="kpi-tile-sub">{rej_pct}% rejection rate</div>
                 <div class="kpi-tile-bar"><div class="kpi-tile-bar-fill" style="width:{rej_pct}%;background:linear-gradient(90deg,#ef4444,#f87171);"></div></div>
             </div>
             <div class="kpi-tile">
-                <div class="kpi-tile-ring" style="background:#64748b;"></div>
-                <div class="kpi-tile-icon" style="background:rgba(100,116,139,0.1);color:#64748b;">⏳</div>
                 <div class="kpi-tile-label">Remaining</div>
                 <div class="kpi-tile-value" style="color:#64748b;">{total_remaining}</div>
                 <div class="kpi-tile-sub">Not yet received</div>
@@ -941,10 +930,4 @@ if st.session_state.logged_in:
     ""
     ""
     st.divider()
-    col_foot1, col_foot2, col_foot3 = st.columns([1, 2, 1])
-    with col_foot1:
-        if st.button("🚪 Logout", use_container_width=True):
-            st.session_state.logged_in = False
-            st.rerun()
-    with col_foot3:
-        st.markdown(f"<div style='text-align:right;color:#94a3b8;font-size:11px;padding-top:8px;'>ATR Dashboard · {datetime.now().strftime('%Y')}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align:right;color:#94a3b8;font-size:11px;padding:4px 0;'>ATR Dashboard · {datetime.now().strftime('%Y')}</div>", unsafe_allow_html=True)
