@@ -274,7 +274,7 @@ if not st.session_state.logged_in:
 # ──────────────────────────────────────────────
 if st.session_state.logged_in:
 
-    col_hero, col_logout = st.columns([11, 1])
+    col_hero, col_refresh, col_logout = st.columns([11, 1, 1])
     with col_hero:
         st.markdown(f"""
         <div class="hero-banner">
@@ -288,6 +288,11 @@ if st.session_state.logged_in:
             </div>
         </div>
         """, unsafe_allow_html=True)
+    with col_refresh:
+        st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
+        if st.button("🔄", key="refresh_top", help="Update data"):
+            st.cache_data.clear()
+            st.rerun()
     with col_logout:
         st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
         if st.button("🚪", key="logout_top", help="Logout"):
@@ -623,18 +628,7 @@ if st.session_state.logged_in:
         geo_raw = load_geojson("afghanistan_provinces.geojson")
         m = build_map(geo_raw, counts)
 
-        colii1, colii2 = st.columns(2)
-        with colii1:
-            with st.container(border=True):
-                st.markdown("### Geographic Coverage")
-                st_folium(m, height=300, use_container_width=True, returned_objects=[], key="afg_map")
-        with colii2:
-            with st.container(border=True):
-                st.markdown("### Submission Timeline")
-                st.plotly_chart(fig_timeline, use_container_width=True)
-
-        # ── SAMPLE TRACKING ──
-        st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
+        # ── Compute data_metrics (needed before KPIs and charts) ──
         target = tari.groupby('Tool').size()
         received = tari[tari.QA_Status.notna()].groupby('Tool').size()
         approved = tari[tari.QA_Status == 'Approved'].groupby('Tool').size()
@@ -647,7 +641,6 @@ if st.session_state.logged_in:
             data_metrics.loc['Total', 'Tool'] = 'All Tools'
         data_metrics['DC Completion %'] = ((data_metrics['Received data'] / data_metrics['Target']) * 100).round(2)
         data_metrics['Completed ✅'] = (data_metrics['Target'] == data_metrics['Approved data']).apply(lambda x: '✅' if x else '❌')
-        st.dataframe(data_metrics, hide_index=True, use_container_width=True)
 
         # ── KPI ROW + ANALYTICS CHARTS ──
         total_target = tari.shape[0]
@@ -688,12 +681,11 @@ if st.session_state.logged_in:
             </div>
         </div>""", unsafe_allow_html=True)
 
-        # ── Two unique analytical charts ──
+        # ── Two analytical charts ──
         chart_col1, chart_col2 = st.columns(2, gap="medium")
 
         with chart_col1:
             with st.container(border=True):
-                # Chart 1: Tool-level progress (stacked horizontal bar)
                 dm_chart = data_metrics[data_metrics['Tool'] != 'All Tools'].copy() if 'All Tools' in data_metrics['Tool'].values else data_metrics.copy()
                 dm_chart = dm_chart.sort_values('Target', ascending=True)
                 fig_tool = go.Figure()
@@ -727,12 +719,10 @@ if st.session_state.logged_in:
 
         with chart_col2:
             with st.container(border=True):
-                # Chart 2: Cumulative submissions over time vs target
                 if len(tall) > 0 and 'Date' in tall.columns:
                     cum_df = tall.groupby('Date').size().reset_index(name='daily')
                     cum_df = cum_df.sort_values('Date')
                     cum_df['cumulative'] = cum_df['daily'].cumsum()
-                    # Also track cumulative approved
                     cum_approved = tall[tall['QA_Status'] == 'Approved'].groupby('Date').size().reset_index(name='daily_approved')
                     cum_approved = cum_approved.sort_values('Date')
                     cum_approved['cum_approved'] = cum_approved['daily_approved'].cumsum()
@@ -740,17 +730,14 @@ if st.session_state.logged_in:
                     cum_df['cum_approved'] = cum_df['cum_approved'].ffill().fillna(0).astype(int)
 
                     fig_cum = go.Figure()
-                    # Target line
                     fig_cum.add_hline(y=total_target, line_dash='dot', line_color='#94a3b8', line_width=1.5,
                         annotation_text=f'Target: {total_target}', annotation_position='top right',
                         annotation_font=dict(size=10, color='#94a3b8', family='Outfit'))
-                    # Cumulative received
                     fig_cum.add_trace(go.Scatter(
                         x=cum_df['Date'], y=cum_df['cumulative'], name='Total Received',
                         mode='lines', line=dict(color='#0f766e', width=2.5),
                         fill='tozeroy', fillcolor='rgba(15,118,110,0.06)',
                         hovertemplate='<b>%{x}</b><br>Total: %{y}<extra></extra>'))
-                    # Cumulative approved
                     fig_cum.add_trace(go.Scatter(
                         x=cum_df['Date'], y=cum_df['cum_approved'], name='Approved',
                         mode='lines', line=dict(color='#10b981', width=2, dash='dash'),
@@ -767,6 +754,21 @@ if st.session_state.logged_in:
                     st.plotly_chart(fig_cum, use_container_width=True)
                 else:
                     st.info("No submission dates available for cumulative chart.")
+
+        # ── SAMPLE TRACKING TABLE ──
+        st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
+        st.dataframe(data_metrics, hide_index=True, use_container_width=True)
+
+        # ── GEOGRAPHIC COVERAGE + SUBMISSION TIMELINE ──
+        colii1, colii2 = st.columns(2)
+        with colii1:
+            with st.container(border=True):
+                st.markdown("### Geographic Coverage")
+                st_folium(m, height=300, use_container_width=True, returned_objects=[], key="afg_map")
+        with colii2:
+            with st.container(border=True):
+                st.markdown("### Submission Timeline")
+                st.plotly_chart(fig_timeline, use_container_width=True)
 
         t = t[t['QA_Status'].isin(qastatus)]
         m_df = tari[~tari.V_ID.isin(t.V_ID)]
