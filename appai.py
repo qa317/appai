@@ -89,7 +89,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVertica
 }
 .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
 
-/* KPI Stack */
+/* KPI Stack (vertical fallback) */
 .kpi-stack { display: flex; flex-direction: column; gap: 12px; }
 .kpi-card-v {
   background: var(--glass); backdrop-filter: blur(8px);
@@ -109,6 +109,41 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVertica
 .kpi-card-v .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 .kpi-card-v .kpi-bar { height: 4px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-top: 6px; }
 .kpi-card-v .kpi-bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+
+/* KPI Horizontal Row */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+@media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+.kpi-tile {
+  background: var(--glass); backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border); border-radius: 18px;
+  padding: 22px 24px; position: relative; overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.kpi-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.kpi-tile .kpi-tile-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 14px;
+}
+.kpi-tile .kpi-tile-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;
+}
+.kpi-tile .kpi-tile-value {
+  font-size: 32px; font-weight: 900; line-height: 1;
+  font-family: 'JetBrains Mono', monospace; letter-spacing: -1.5px;
+}
+.kpi-tile .kpi-tile-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.kpi-tile .kpi-tile-bar {
+  height: 5px; background: #e2e8f0; border-radius: 99px;
+  overflow: hidden; margin-top: 12px;
+}
+.kpi-tile .kpi-tile-bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s cubic-bezier(.22,.61,.36,1); }
+.kpi-tile .kpi-tile-ring {
+  position: absolute; top: -20px; right: -20px;
+  width: 80px; height: 80px; border-radius: 50%;
+  opacity: 0.06;
+}
 
 /* Link Grid */
 .links-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
@@ -617,7 +652,7 @@ if st.session_state.logged_in:
         data_metrics['Completed ✅'] = (data_metrics['Target'] == data_metrics['Approved data']).apply(lambda x: '✅' if x else '❌')
         st.dataframe(data_metrics, hide_index=True, use_container_width=True)
 
-        # ── KPI + DONUT COMBINED LAYOUT ──
+        # ── KPI ROW + ANALYTICS CHARTS ──
         total_target = tari.shape[0]
         total_received = tari[tari.QA_Status.isin(qastatus)].shape[0]
         total_remaining = max(0, total_target - total_received)
@@ -626,85 +661,123 @@ if st.session_state.logged_in:
         rejected_n = int(g[g['QA_Status'] == 'Rejected']['count'].sum()) if 'Rejected' in g['QA_Status'].values else 0
         dc_pct = round(100 * total_received / total_target) if total_target else 0
         qa_pct = round(100 * approved_n / total_received) if total_received else 0
+        rej_pct = round(100 * rejected_n / total_received) if total_received else 0
 
         ""
-        col_kpi, col_donuts = st.columns([1, 2], gap="medium")
+        # ── 4 KPIs in horizontal row ──
+        st.markdown(f"""<div class="kpi-row">
+            <div class="kpi-tile">
+                <div class="kpi-tile-ring" style="background:#0f766e;"></div>
+                <div class="kpi-tile-icon" style="background:rgba(15,118,110,0.1);color:#0f766e;">📥</div>
+                <div class="kpi-tile-label">DC Progress</div>
+                <div class="kpi-tile-value" style="color:#0f766e;">{dc_pct}%</div>
+                <div class="kpi-tile-sub">{total_received} of {total_target} received</div>
+                <div class="kpi-tile-bar"><div class="kpi-tile-bar-fill" style="width:{dc_pct}%;background:linear-gradient(90deg,#0f766e,#14b8a6);"></div></div>
+            </div>
+            <div class="kpi-tile">
+                <div class="kpi-tile-ring" style="background:#10b981;"></div>
+                <div class="kpi-tile-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">✓</div>
+                <div class="kpi-tile-label">QA Approved</div>
+                <div class="kpi-tile-value" style="color:#10b981;">{approved_n}</div>
+                <div class="kpi-tile-sub">{qa_pct}% approval rate</div>
+                <div class="kpi-tile-bar"><div class="kpi-tile-bar-fill" style="width:{qa_pct}%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
+            </div>
+            <div class="kpi-tile">
+                <div class="kpi-tile-ring" style="background:#ef4444;"></div>
+                <div class="kpi-tile-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">✕</div>
+                <div class="kpi-tile-label">Rejected</div>
+                <div class="kpi-tile-value" style="color:#ef4444;">{rejected_n}</div>
+                <div class="kpi-tile-sub">{rej_pct}% rejection rate</div>
+                <div class="kpi-tile-bar"><div class="kpi-tile-bar-fill" style="width:{rej_pct}%;background:linear-gradient(90deg,#ef4444,#f87171);"></div></div>
+            </div>
+            <div class="kpi-tile">
+                <div class="kpi-tile-ring" style="background:#64748b;"></div>
+                <div class="kpi-tile-icon" style="background:rgba(100,116,139,0.1);color:#64748b;">⏳</div>
+                <div class="kpi-tile-label">Remaining</div>
+                <div class="kpi-tile-value" style="color:#64748b;">{total_remaining}</div>
+                <div class="kpi-tile-sub">Not yet received</div>
+            </div>
+        </div>""", unsafe_allow_html=True)
 
-        with col_kpi:
-            st.markdown(f"""<div class="kpi-stack">
-                <div class="kpi-card-v">
-                    <div class="kpi-icon-circle" style="background:rgba(15,118,110,0.1);color:#0f766e;">📥</div>
-                    <div class="kpi-body">
-                        <div class="kpi-label">DC Progress</div>
-                        <div class="kpi-value" style="color:#0f766e;">{dc_pct}%</div>
-                        <div class="kpi-sub">{total_received} / {total_target} received</div>
-                        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{dc_pct}%;background:linear-gradient(90deg,#0f766e,#14b8a6);"></div></div>
-                    </div>
-                </div>
-                <div class="kpi-card-v">
-                    <div class="kpi-icon-circle" style="background:rgba(16,185,129,0.1);color:#10b981;">✓</div>
-                    <div class="kpi-body">
-                        <div class="kpi-label">QA Approved</div>
-                        <div class="kpi-value" style="color:#10b981;">{approved_n}</div>
-                        <div class="kpi-sub">{qa_pct}% approval rate</div>
-                        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:{qa_pct}%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div>
-                    </div>
-                </div>
-                <div class="kpi-card-v">
-                    <div class="kpi-icon-circle" style="background:rgba(239,68,68,0.1);color:#ef4444;">✕</div>
-                    <div class="kpi-body">
-                        <div class="kpi-label">Rejected</div>
-                        <div class="kpi-value" style="color:#ef4444;">{rejected_n}</div>
-                        <div class="kpi-sub">Requires re-collection</div>
-                    </div>
-                </div>
-                <div class="kpi-card-v">
-                    <div class="kpi-icon-circle" style="background:rgba(100,116,139,0.1);color:#64748b;">⏳</div>
-                    <div class="kpi-body">
-                        <div class="kpi-label">Remaining</div>
-                        <div class="kpi-value" style="color:#64748b;">{total_remaining}</div>
-                        <div class="kpi-sub">Not yet received</div>
-                    </div>
-                </div>
-            </div>""", unsafe_allow_html=True)
+        # ── Two unique analytical charts ──
+        chart_col1, chart_col2 = st.columns(2, gap="medium")
 
-        with col_donuts:
-            labels1 = ['Received', 'Remaining']
-            values1 = [total_received, total_remaining]
-            labels2 = g['QA_Status'].tolist()
-            values2 = g['count'].tolist()
-            DONUT_PALETTE_DC = ["#0f766e", "#e2e8f0"]
-            DONUT_PALETTE_QA = ["#10b981", "#ef4444", "#f59e0b", "#cbd5e1"]
+        with chart_col1:
+            with st.container(border=True):
+                # Chart 1: Tool-level progress (stacked horizontal bar)
+                dm_chart = data_metrics[data_metrics['Tool'] != 'All Tools'].copy() if 'All Tools' in data_metrics['Tool'].values else data_metrics.copy()
+                dm_chart = dm_chart.sort_values('Target', ascending=True)
+                fig_tool = go.Figure()
+                fig_tool.add_trace(go.Bar(
+                    y=dm_chart['Tool'], x=dm_chart['Approved data'], name='Approved',
+                    orientation='h', marker_color='#10b981',
+                    hovertemplate='<b>%{y}</b><br>Approved: %{x}<extra></extra>'))
+                fig_tool.add_trace(go.Bar(
+                    y=dm_chart['Tool'], x=dm_chart['Rejected data'], name='Rejected',
+                    orientation='h', marker_color='#ef4444',
+                    hovertemplate='<b>%{y}</b><br>Rejected: %{x}<extra></extra>'))
+                fig_tool.add_trace(go.Bar(
+                    y=dm_chart['Tool'], x=dm_chart['Awaiting review'], name='Awaiting QA',
+                    orientation='h', marker_color='#f59e0b',
+                    hovertemplate='<b>%{y}</b><br>Awaiting: %{x}<extra></extra>'))
+                remaining_per_tool = (dm_chart['Target'] - dm_chart['Received data']).clip(lower=0)
+                fig_tool.add_trace(go.Bar(
+                    y=dm_chart['Tool'], x=remaining_per_tool, name='Not Received',
+                    orientation='h', marker_color='#e2e8f0',
+                    hovertemplate='<b>%{y}</b><br>Not received: %{x}<extra></extra>'))
+                fig_tool.update_layout(
+                    barmode='stack', title=dict(text='Progress by Tool', font=dict(size=14, weight=900, family='Outfit')),
+                    height=max(260, 50 * len(dm_chart)), margin=dict(l=10, r=20, t=45, b=10),
+                    template='plotly_white', plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                    legend=dict(orientation='h', y=-0.15, x=0.5, xanchor='center',
+                        font=dict(size=10, color='#64748b', family='Outfit')),
+                    xaxis=dict(gridcolor='rgba(0,0,0,0.04)', title=''),
+                    yaxis=dict(gridcolor='rgba(0,0,0,0)', title=''),
+                    font=dict(family='Outfit, sans-serif'))
+                st.plotly_chart(fig_tool, use_container_width=True)
 
-            def make_donut(labels, values, title, colors, note=""):
-                pct = round(100 * values[0] / sum(values)) if sum(values) else 0
-                fig = go.Figure(go.Pie(labels=labels, values=values, hole=0.78,
-                    textinfo="percent", textfont=dict(size=11, color="#64748b", family="Outfit"),
-                    marker=dict(colors=colors[:len(values)], line=dict(color="rgba(244,245,247,1)", width=4)),
-                    pull=[0.03] + [0] * (len(values) - 1),
-                    hovertemplate="<b>%{label}</b>: %{percent}<extra></extra>", showlegend=True, sort=False))
-                fig.update_layout(
-                    title=dict(text=title, x=0.5, xanchor="center", font=dict(size=14, color="#0f172a", family="Outfit")),
-                    height=280, margin=dict(l=0, r=0, t=50, b=0), template="plotly_white",
-                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                    legend=dict(orientation="h", y=-0.08, x=0.5, xanchor="center", font=dict(size=11, color="#64748b", family="Outfit")),
-                    annotations=[dict(text=f"<b style='font-size:28px;color:#0f172a;font-family:JetBrains Mono'>{pct}%</b><br><span style='font-size:10px;color:#94a3b8'>{note}</span>",
-                        x=0.5, y=0.5, showarrow=False)])
-                return fig
+        with chart_col2:
+            with st.container(border=True):
+                # Chart 2: Cumulative submissions over time vs target
+                if len(tall) > 0 and 'Date' in tall.columns:
+                    cum_df = tall.groupby('Date').size().reset_index(name='daily')
+                    cum_df = cum_df.sort_values('Date')
+                    cum_df['cumulative'] = cum_df['daily'].cumsum()
+                    # Also track cumulative approved
+                    cum_approved = tall[tall['QA_Status'] == 'Approved'].groupby('Date').size().reset_index(name='daily_approved')
+                    cum_approved = cum_approved.sort_values('Date')
+                    cum_approved['cum_approved'] = cum_approved['daily_approved'].cumsum()
+                    cum_df = cum_df.merge(cum_approved[['Date', 'cum_approved']], on='Date', how='left')
+                    cum_df['cum_approved'] = cum_df['cum_approved'].ffill().fillna(0).astype(int)
 
-            has_both = all(status in completion for status in status_options)
-            has_call_status = "Call Status" in t.columns
-            if has_both and has_call_status: terminology = 'Called'
-            elif has_both: terminology = 'Visited'
-            else: terminology = completion[0] if completion else ''
-
-            fig1 = make_donut(labels1, values1, "Data Collection", DONUT_PALETTE_DC, terminology)
-            fig2 = make_donut(labels2, values2, "QA Progress", DONUT_PALETTE_QA, "QA'ed")
-            d_col1, d_col2 = st.columns(2)
-            with d_col1:
-                st.plotly_chart(fig1, use_container_width=True)
-            with d_col2:
-                st.plotly_chart(fig2, use_container_width=True)
+                    fig_cum = go.Figure()
+                    # Target line
+                    fig_cum.add_hline(y=total_target, line_dash='dot', line_color='#94a3b8', line_width=1.5,
+                        annotation_text=f'Target: {total_target}', annotation_position='top right',
+                        annotation_font=dict(size=10, color='#94a3b8', family='Outfit'))
+                    # Cumulative received
+                    fig_cum.add_trace(go.Scatter(
+                        x=cum_df['Date'], y=cum_df['cumulative'], name='Total Received',
+                        mode='lines', line=dict(color='#0f766e', width=2.5),
+                        fill='tozeroy', fillcolor='rgba(15,118,110,0.06)',
+                        hovertemplate='<b>%{x}</b><br>Total: %{y}<extra></extra>'))
+                    # Cumulative approved
+                    fig_cum.add_trace(go.Scatter(
+                        x=cum_df['Date'], y=cum_df['cum_approved'], name='Approved',
+                        mode='lines', line=dict(color='#10b981', width=2, dash='dash'),
+                        hovertemplate='<b>%{x}</b><br>Approved: %{y}<extra></extra>'))
+                    fig_cum.update_layout(
+                        title=dict(text='Cumulative Progress', font=dict(size=14, weight=900, family='Outfit')),
+                        height=max(260, 50 * len(dm_chart)), margin=dict(l=40, r=20, t=45, b=10),
+                        template='plotly_white', plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                        legend=dict(orientation='h', y=-0.15, x=0.5, xanchor='center',
+                            font=dict(size=10, color='#64748b', family='Outfit')),
+                        xaxis=dict(gridcolor='rgba(0,0,0,0.03)', title=''),
+                        yaxis=dict(gridcolor='rgba(0,0,0,0.05)', title='Submissions'),
+                        font=dict(family='Outfit, sans-serif'))
+                    st.plotly_chart(fig_cum, use_container_width=True)
+                else:
+                    st.info("No submission dates available for cumulative chart.")
 
         t = t[t['QA_Status'].isin(qastatus)]
         m_df = tari[~tari.V_ID.isin(t.V_ID)]
