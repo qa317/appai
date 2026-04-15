@@ -274,30 +274,18 @@ if not st.session_state.logged_in:
 # ──────────────────────────────────────────────
 if st.session_state.logged_in:
 
-    col_hero, col_refresh, col_logout = st.columns([11, 1, 1])
-    with col_hero:
-        st.markdown(f"""
-        <div class="hero-banner">
-            <div>
-                <h1>Data Collection & QA Dashboard</h1>
-                <div class="hero-sub">ATR Consulting · Progress Tracker</div>
-            </div>
-            <div class="hero-badge">
-                <span class="dot"></span>
-                {st.session_state.username}
-            </div>
+    st.markdown(f"""
+    <div class="hero-banner">
+        <div>
+            <h1>Data Collection & QA Dashboard</h1>
+            <div class="hero-sub">ATR Consulting · Progress Tracker</div>
         </div>
-        """, unsafe_allow_html=True)
-    with col_refresh:
-        st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
-        if st.button("🔄", key="refresh_top", help="Update data"):
-            st.cache_data.clear()
-            st.rerun()
-    with col_logout:
-        st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
-        if st.button("🚪", key="logout_top", help="Logout"):
-            st.session_state.logged_in = False
-            st.rerun()
+        <div class="hero-badge">
+            <span class="dot"></span>
+            {st.session_state.username}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.toast("Press **R** to refresh · Figures include both complete and incomplete data by default.")
 
@@ -932,4 +920,10 @@ if st.session_state.logged_in:
     ""
     ""
     st.divider()
-    st.markdown(f"<div style='text-align:right;color:#94a3b8;font-size:11px;padding:4px 0;'>ATR Dashboard · {datetime.now().strftime('%Y')}</div>", unsafe_allow_html=True)
+    col_foot1, col_foot2, col_foot3 = st.columns([1, 2, 1])
+    with col_foot1:
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state.logged_in = False
+            st.rerun()
+    with col_foot3:
+        st.markdown(f"<div style='text-align:right;color:#94a3b8;font-size:11px;padding-top:8px;'>ATR Dashboard · {datetime.now().strftime('%Y')}</div>", unsafe_allow_html=True)
