@@ -40,6 +40,33 @@ div[data-testid="stHorizontalBlock"],
 div[data-testid="stMetric"],
 .stDataFrame { background: transparent !important; }
 
+/* ── Make dataframe toolbar (download/search/fullscreen) visible on hover ── */
+div[data-testid="stDataFrame"],
+div[data-testid="stDataFrameResizable"] { position: relative; }
+
+div[data-testid="stDataFrame"] [data-testid="stElementToolbar"],
+div[data-testid="stDataFrameResizable"] [data-testid="stElementToolbar"],
+[data-testid="stElementToolbar"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  background: rgba(255,255,255,0.95) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+  transition: opacity 0.2s ease !important;
+}
+div[data-testid="stDataFrame"]:hover [data-testid="stElementToolbar"],
+div[data-testid="stDataFrameResizable"]:hover [data-testid="stElementToolbar"] {
+  opacity: 1 !important;
+}
+[data-testid="stElementToolbarButton"] {
+  color: #0f766e !important;
+}
+[data-testid="stElementToolbarButton"]:hover {
+  background: rgba(15,118,110,0.08) !important;
+}
+
 /* Bordered containers: frosted glass */
 div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVerticalBlock"]) {
   background: var(--glass) !important;
@@ -708,37 +735,177 @@ if st.session_state.logged_in:
         with chart_col2:
             with st.container(border=True):
                 if len(tall) > 0 and 'Date' in tall.columns:
+                    # Build daily + cumulative series
                     cum_df = tall.groupby('Date').size().reset_index(name='daily')
-                    cum_df = cum_df.sort_values('Date')
+                    cum_df['Date'] = pd.to_datetime(cum_df['Date'], errors='coerce')
+                    cum_df = cum_df.dropna(subset=['Date']).sort_values('Date').reset_index(drop=True)
                     cum_df['cumulative'] = cum_df['daily'].cumsum()
-                    cum_approved = tall[tall['QA_Status'] == 'Approved'].groupby('Date').size().reset_index(name='daily_approved')
-                    cum_approved = cum_approved.sort_values('Date')
-                    cum_approved['cum_approved'] = cum_approved['daily_approved'].cumsum()
-                    cum_df = cum_df.merge(cum_approved[['Date', 'cum_approved']], on='Date', how='left')
-                    cum_df['cum_approved'] = cum_df['cum_approved'].ffill().fillna(0).astype(int)
+
+                    # Pull planned & actual DC dates from the project row
+                    def _pdate(col):
+                        if col in project_data.columns and len(project_data):
+                            return pd.to_datetime(project_data[col].iloc[0], dayfirst=True, errors='coerce')
+                        return pd.NaT
+                    planned_start = _pdate('Planned Data Collection-Start')
+                    planned_end   = _pdate('Planned Data Collection-End')
+                    actual_start  = _pdate('Data Collection-Start')
+
+                    today = pd.Timestamp.today().normalize()
+                    # Anchor start: actual > first submission > planned
+                    if pd.notna(actual_start):
+                        dc_start = actual_start
+                    elif len(cum_df):
+                        dc_start = cum_df['Date'].min()
+                    else:
+                        dc_start = planned_start if pd.notna(planned_start) else today
+
+                    # Average per day so far (fallback to 20 if none yet)
+                    days_elapsed = max(1, (today - dc_start).days)
+                    avg_per_day = total_received / days_elapsed if days_elapsed > 0 else 0
+                    est_used = False
+                    if avg_per_day <= 0:
+                        avg_per_day = 20
+                        est_used = True
+
+                    # Forecast end date at current pace
+                    remaining = max(0, total_target - total_received)
+                    days_to_finish = (remaining / avg_per_day) if avg_per_day > 0 else 0
+                    forecast_end = today + pd.Timedelta(days=int(np.ceil(days_to_finish)))
+
+                    # Required pace to hit planned end date
+                    if pd.notna(planned_end):
+                        days_left_plan = (planned_end - today).days
+                        if days_left_plan > 0:
+                            required_avg = remaining / days_left_plan
+                        else:
+                            required_avg = float(remaining)  # past deadline
+                    else:
+                        days_left_plan = None
+                        required_avg = None
+
+                    # Delta vs plan
+                    if pd.notna(planned_end):
+                        delta_days = (forecast_end - planned_end).days
+                    else:
+                        delta_days = 0
+                    is_behind = delta_days > 0
+                    pace_color = '#ef4444' if is_behind else '#10b981'
+
+                    # X-axis end: stretch to whichever is later among forecast/planned end
+                    x_end = max([d for d in [forecast_end, planned_end] if pd.notna(d)] + [cum_df['Date'].max() if len(cum_df) else today])
+                    x_end = x_end + pd.Timedelta(days=3)
 
                     fig_cum = go.Figure()
-                    fig_cum.add_hline(y=total_target, line_dash='dot', line_color='#94a3b8', line_width=1.5,
-                        annotation_text=f'Target: {total_target}', annotation_position='top right',
-                        annotation_font=dict(size=10, color='#94a3b8', family='Outfit'))
+
+                    # Target horizontal line
+                    fig_cum.add_hline(
+                        y=total_target, line_dash='dot', line_color='#94a3b8', line_width=1.3,
+                        annotation_text=f'🎯 Target {total_target:,}',
+                        annotation_position='top left',
+                        annotation_font=dict(size=10, color='#475569', family='Outfit'))
+
+                    # Actual cumulative (area + line)
                     fig_cum.add_trace(go.Scatter(
-                        x=cum_df['Date'], y=cum_df['cumulative'], name='Total Received',
-                        mode='lines', line=dict(color='#0f766e', width=2.5),
-                        fill='tozeroy', fillcolor='rgba(15,118,110,0.06)',
-                        hovertemplate='<b>%{x}</b><br>Total: %{y}<extra></extra>'))
+                        x=cum_df['Date'], y=cum_df['cumulative'],
+                        name='Actual', mode='lines',
+                        line=dict(color='#0f766e', width=3, shape='spline'),
+                        fill='tozeroy', fillcolor='rgba(15,118,110,0.09)',
+                        hovertemplate='<b>%{x|%d %b %Y}</b><br>Received: <b>%{y:,}</b><extra></extra>'))
+
+                    # Today marker point on the actual line
+                    if len(cum_df):
+                        fig_cum.add_trace(go.Scatter(
+                            x=[cum_df['Date'].iloc[-1]], y=[cum_df['cumulative'].iloc[-1]],
+                            mode='markers', showlegend=False,
+                            marker=dict(size=9, color='#0f766e', line=dict(color='#ffffff', width=2)),
+                            hovertemplate='<b>Today</b><br>Received: <b>%{y:,}</b><extra></extra>'))
+
+                    # Current-pace projection: from today → forecast_end hitting target
                     fig_cum.add_trace(go.Scatter(
-                        x=cum_df['Date'], y=cum_df['cum_approved'], name='Approved',
-                        mode='lines', line=dict(color='#10b981', width=2, dash='dash'),
-                        hovertemplate='<b>%{x}</b><br>Approved: %{y}<extra></extra>'))
+                        x=[today, forecast_end], y=[total_received, total_target],
+                        name=f'Current pace · {avg_per_day:.0f}/day',
+                        mode='lines',
+                        line=dict(color=pace_color, width=2.3, dash='dash'),
+                        hovertemplate='<b>Current-pace projection</b><br>%{x|%d %b %Y} → %{y:,}<extra></extra>'))
+
+                    # Required-pace line: from today → planned_end hitting target
+                    if pd.notna(planned_end) and required_avg is not None:
+                        fig_cum.add_trace(go.Scatter(
+                            x=[today, planned_end], y=[total_received, total_target],
+                            name=f'Required · {required_avg:.0f}/day',
+                            mode='lines',
+                            line=dict(color='#6366f1', width=2.3, dash='dot'),
+                            hovertemplate='<b>Required to meet deadline</b><br>%{x|%d %b %Y} → %{y:,}<extra></extra>'))
+
+                    # Planned end vertical line
+                    if pd.notna(planned_end):
+                        fig_cum.add_vline(
+                            x=planned_end, line_dash='dash', line_color='#6366f1',
+                            line_width=1.2, opacity=0.7,
+                            annotation_text=f'Planned end<br>{planned_end:%d %b}',
+                            annotation_position='top',
+                            annotation_font=dict(size=9, color='#6366f1', family='Outfit'))
+
+                    # Forecast end vertical line
+                    fig_cum.add_vline(
+                        x=forecast_end, line_dash='dash', line_color=pace_color,
+                        line_width=1.2, opacity=0.7,
+                        annotation_text=f'Forecast<br>{forecast_end:%d %b}',
+                        annotation_position='bottom',
+                        annotation_font=dict(size=9, color=pace_color, family='Outfit'))
+
+                    # Today dotted vertical
+                    fig_cum.add_vline(
+                        x=today, line_dash='dot', line_color='#0f172a',
+                        line_width=1, opacity=0.25)
+
+                    # Status badge text
+                    if pd.notna(planned_end):
+                        if delta_days > 0:
+                            status_txt = f"<b style='color:#ef4444'>⚠ {delta_days}d behind</b>"
+                        elif delta_days < 0:
+                            status_txt = f"<b style='color:#10b981'>✓ {abs(delta_days)}d ahead</b>"
+                        else:
+                            status_txt = f"<b style='color:#10b981'>✓ On track</b>"
+                    else:
+                        status_txt = "<b style='color:#64748b'>No planned end</b>"
+
+                    est_tag = " <span style='color:#94a3b8;font-size:9px'>(est.)</span>" if est_used else ""
+                    req_line = (f"<b>Required:</b>&nbsp;<span style='color:#6366f1'>{required_avg:.1f}/day</span><br>"
+                                if required_avg is not None else "")
+
+                    info_html = (
+                        f"<span style='font-size:10px;color:#64748b;font-weight:700;letter-spacing:0.06em;text-transform:uppercase'>PROGRESS FORECAST</span><br>"
+                        f"<b>Current pace:</b>&nbsp;<span style='color:#0f766e'>{avg_per_day:.1f}/day{est_tag}</span><br>"
+                        f"{req_line}"
+                        f"<b>Forecast end:</b>&nbsp;<span style='color:{pace_color}'>{forecast_end:%d %b %Y}</span><br>"
+                        f"{status_txt}"
+                    )
+
+                    fig_cum.add_annotation(
+                        xref='paper', yref='paper', x=0.015, y=0.985,
+                        xanchor='left', yanchor='top',
+                        text=info_html, showarrow=False, align='left',
+                        font=dict(size=11, family='Outfit', color='#0f172a'),
+                        bgcolor='rgba(255,255,255,0.92)', bordercolor='#e2e8f0',
+                        borderwidth=1, borderpad=10)
+
                     fig_cum.update_layout(
-                        title=dict(text='Cumulative Progress', font=dict(size=14, weight=900, family='Outfit')),
-                        height=max(260, 50 * len(dm_chart)), margin=dict(l=40, r=20, t=45, b=10),
-                        template='plotly_white', plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-                        legend=dict(orientation='h', y=-0.15, x=0.5, xanchor='center',
-                            font=dict(size=10, color='#64748b', family='Outfit')),
-                        xaxis=dict(gridcolor='rgba(0,0,0,0.03)', title=''),
-                        yaxis=dict(gridcolor='rgba(0,0,0,0.05)', title='Submissions'),
-                        font=dict(family='Outfit, sans-serif'))
+                        title=dict(text='Cumulative Progress & Forecast',
+                                   font=dict(size=14, weight=900, family='Outfit')),
+                        height=max(340, 50 * len(dm_chart)),
+                        margin=dict(l=45, r=25, t=55, b=20),
+                        template='plotly_white',
+                        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                        legend=dict(orientation='h', y=-0.18, x=0.5, xanchor='center',
+                            font=dict(size=10, color='#64748b', family='Outfit'),
+                            bgcolor='rgba(0,0,0,0)'),
+                        xaxis=dict(gridcolor='rgba(0,0,0,0.03)', title='',
+                                   range=[dc_start - pd.Timedelta(days=1), x_end]),
+                        yaxis=dict(gridcolor='rgba(0,0,0,0.05)', title='Cumulative Submissions',
+                                   range=[0, total_target * 1.08]),
+                        font=dict(family='Outfit, sans-serif'),
+                        hovermode='x unified')
                     st.plotly_chart(fig_cum, use_container_width=True)
                 else:
                     st.info("No submission dates available for cumulative chart.")
