@@ -235,77 +235,18 @@ user_dict = df_users.set_index("users")[["password", "project"]].to_dict(orient=
 def convert_df_to_csv(dataframe):
     return dataframe.to_csv(index=False, encoding='utf-8')
 
-def filterable_table(df_input, key="ft", height=400):
-    """Render a DataFrame as an HTML table with per-column dropdown filters."""
-    df_t = df_input.reset_index(drop=True)
-    cols = df_t.columns.tolist()
-    rows_json = df_t.fillna("").astype(str).values.tolist()
-    import json as _json
-    cols_js = _json.dumps(cols)
-    rows_js = _json.dumps(rows_json)
-    html = f"""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap');
-    *{{box-sizing:border-box;margin:0;padding:0}}
-    body{{font-family:'Outfit',sans-serif;background:transparent}}
-    .ft-wrap{{width:100%;overflow-x:auto}}
-    .ft-filters{{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}}
-    .ft-filters select{{
-      padding:6px 10px;border:1px solid #e2e8f0;border-radius:10px;
-      font-size:11px;font-family:'Outfit',sans-serif;background:#fff;
-      color:#334155;font-weight:600;max-width:180px;cursor:pointer;
-    }}
-    .ft-filters select:focus{{outline:none;border-color:#0f766e}}
-    table{{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}}
-    thead th{{
-      position:sticky;top:0;z-index:2;
-      background:#f8fafc;color:#64748b;font-size:10px;font-weight:700;
-      text-transform:uppercase;letter-spacing:.08em;
-      padding:10px 12px;border-bottom:2px solid #e2e8f0;text-align:left;
-      white-space:nowrap;
-    }}
-    tbody td{{
-      padding:9px 12px;border-bottom:1px solid #f1f5f9;color:#0f172a;
-      font-family:'JetBrains Mono',monospace;font-size:12px;
-    }}
-    tbody tr:hover{{background:rgba(15,118,110,0.04)}}
-    .ft-count{{font-size:11px;color:#94a3b8;margin-top:6px;font-weight:600}}
-    </style>
-    <div class="ft-wrap">
-      <div class="ft-filters" id="filters_{key}"></div>
-      <div style="max-height:{height-60}px;overflow:auto">
-        <table><thead><tr id="thead_{key}"></tr></thead><tbody id="tbody_{key}"></tbody></table>
-      </div>
-      <div class="ft-count" id="count_{key}"></div>
-    </div>
-    <script>
-    (function(){{
-      const cols={cols_js};
-      const rows={rows_js};
-      const fDiv=document.getElementById('filters_{key}');
-      const thead=document.getElementById('thead_{key}');
-      const tbody=document.getElementById('tbody_{key}');
-      const countEl=document.getElementById('count_{key}');
-      const filters={{}};
-      cols.forEach((c,i)=>{{
-        thead.innerHTML+=`<th>${{c}}</th>`;
-        const vals=[...new Set(rows.map(r=>r[i]))].sort();
-        if(vals.length>1 && vals.length<=50){{
-          const sel=document.createElement('select');
-          sel.innerHTML=`<option value="">All ${{c}}</option>`+vals.map(v=>`<option value="${{v}}">${{v}}</option>`).join('');
-          sel.addEventListener('change',()=>{{filters[i]=sel.value;render()}});
-          fDiv.appendChild(sel);
-        }}
-      }});
-      function render(){{
-        const filtered=rows.filter(r=>Object.keys(filters).every(k=>!filters[k]||r[k]===filters[k]));
-        tbody.innerHTML=filtered.map(r=>'<tr>'+r.map(c=>`<td>${{c}}</td>`).join('')+'</tr>').join('');
-        countEl.textContent=filtered.length+' of '+rows.length+' rows';
-      }}
-      render();
-    }})();
-    </script>"""
-    components.html(html, height=height, scrolling=False)
+def filtered_dataframe(df_input, key="fdf"):
+    """Display a dataframe with Streamlit-native per-column filters for categorical columns."""
+    df_display = df_input.copy()
+    cat_cols = [c for c in df_display.columns if df_display[c].nunique() <= 30 and df_display[c].nunique() > 1]
+    if cat_cols:
+        filter_cols = st.columns(min(len(cat_cols), 4))
+        for i, col in enumerate(cat_cols[:4]):
+            with filter_cols[i % len(filter_cols)]:
+                opts = sorted(df_display[col].dropna().unique().tolist(), key=str)
+                sel = st.multiselect(col, opts, default=opts, key=f"{key}_{col}")
+                df_display = df_display[df_display[col].isin(sel)]
+    st.dataframe(df_display, hide_index=True, use_container_width=True)
 
 # ──────────────────────────────────────────────
 # AUTH
@@ -817,7 +758,7 @@ if st.session_state.logged_in:
 
         # ── SAMPLE TRACKING TABLE ──
         st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
-        filterable_table(data_metrics, key="sample_tracking", height=min(400, 100 + 35 * len(data_metrics)))
+        filtered_dataframe(data_metrics, key="sample_tracking")
 
         # ── GEOGRAPHIC COVERAGE + SUBMISSION TIMELINE ──
         colii1, colii2 = st.columns(2)
@@ -866,7 +807,7 @@ if st.session_state.logged_in:
                     summary = pd.DataFrame({'Total_Target': total_target_s, 'Received_Data': received_data_s}).fillna(0).astype(int)
                     summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
                     summary['Completed ✅'] = (summary['Received_Data'] == summary['Total_Target']).apply(lambda x: '✅' if x else '❌')
-                    st.dataframe(summary)
+                    filtered_dataframe(summary.reset_index(), key="dc_summary")
         with col4:
             with st.container(border=True):
                 disag = st.multiselect('Dataset Summary', tall.columns.tolist(), default=def_var1, help='Create summaries based on selected columns.')
@@ -878,7 +819,7 @@ if st.session_state.logged_in:
                     else:
                         disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
                         disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
-                    st.dataframe(disag_t)
+                    filtered_dataframe(disag_t, key="dataset_summary")
         if 'tall2' in locals():
             disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,
                 help='For phone surveys where multiple attempts to reach respondents may be necessary.')
@@ -890,7 +831,7 @@ if st.session_state.logged_in:
                 else:
                     disag_traw = tall2.groupby(disag_raw).size().unstack(disag_raw[-1], fill_value=0).reset_index()
                     disag_traw.loc['Total'] = disag_traw.sum(numeric_only=True)
-                st.dataframe(disag_traw)
+                st.dataframe(disag_traw, hide_index=True, use_container_width=True)
 
     # ── UPDATE LOGS ──
     def parse_log(log_text):
