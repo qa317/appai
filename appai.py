@@ -799,11 +799,25 @@ if st.session_state.logged_in:
         with chart_col2:
             with st.container(border=True):
                 if len(tall) > 0 and 'Date' in tall.columns:
-                    # Build daily + cumulative series
-                    cum_df = tall.groupby('Date').size().reset_index(name='daily')
+                    # ── Build cumulative series from the SAME V_IDs that drive
+                    # `total_received` (so the final cumulative value matches the
+                    # Sample Tracking table exactly). Each V_ID is counted once,
+                    # at the date of its FIRST submission.
+                    received_vids = tari.loc[tari.QA_Status.isin(qastatus), 'V_ID'].dropna().unique()
+                    _first_sub = (tall[tall['V_ID'].isin(received_vids)]
+                                  .sort_values('Date')
+                                  .drop_duplicates('V_ID', keep='first'))
+                    cum_df = _first_sub.groupby('Date').size().reset_index(name='daily')
                     cum_df['Date'] = pd.to_datetime(cum_df['Date'], errors='coerce')
                     cum_df = cum_df.dropna(subset=['Date']).sort_values('Date').reset_index(drop=True)
                     cum_df['cumulative'] = cum_df['daily'].cumsum()
+
+                    # Safety: if any received V_ID had no date, pad the last point
+                    # so the final cumulative still matches total_received exactly.
+                    if len(cum_df) and cum_df['cumulative'].iloc[-1] < total_received:
+                        gap = total_received - cum_df['cumulative'].iloc[-1]
+                        cum_df.loc[cum_df.index[-1], 'daily']     += gap
+                        cum_df.loc[cum_df.index[-1], 'cumulative'] = total_received
 
                     # Pull planned & actual DC dates from the project row
                     def _pdate(col):
@@ -894,7 +908,24 @@ if st.session_state.logged_in:
                             x=[cum_df['Date'].iloc[-1]], y=[cum_df['cumulative'].iloc[-1]],
                             mode='markers', showlegend=False,
                             marker=dict(size=9, color='#0f766e', line=dict(color='#ffffff', width=2)),
-                            hovertemplate='<b>Today</b><br>Received: <b>%{y:,}</b><extra></extra>'))
+                            hovertemplate='<b>Last submission</b><br>%{x|%d %b %Y}<br>Received: <b>%{y:,}</b><extra></extra>'))
+
+                    # ── Stall segment ──
+                    # If the last submission is before today AND collection isn't complete,
+                    # draw a flat dashed line across the gap so the pause is visible.
+                    last_sub_date = cum_df['Date'].max() if len(cum_df) else None
+                    stall_days = (today - last_sub_date).days if last_sub_date is not None else 0
+                    is_stalled = (last_sub_date is not None
+                                  and stall_days >= 1
+                                  and total_received < total_target)
+                    if is_stalled:
+                        fig_cum.add_trace(go.Scatter(
+                            x=[last_sub_date, today],
+                            y=[total_received, total_received],
+                            name=f'No collection · {stall_days}d',
+                            mode='lines',
+                            line=dict(color='#94a3b8', width=2, dash='dot'),
+                            hovertemplate='<b>No submissions</b><br>%{x|%d %b %Y}<extra></extra>'))
 
                     # Current-pace projection: from today → forecast_end hitting target
                     fig_cum.add_trace(go.Scatter(
