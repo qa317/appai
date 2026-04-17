@@ -730,7 +730,7 @@ if st.session_state.logged_in:
                     hovertemplate='<b>%{y}</b><br>Not received: %{x}<extra></extra>'))
                 fig_tool.update_layout(
                     barmode='stack', title=dict(text='Progress by Tool', font=dict(size=14, weight=900, family='Outfit')),
-                    height=max(260, 50 * len(dm_chart)), margin=dict(l=10, r=20, t=45, b=10),
+                    height=max(420, 50 * len(dm_chart)), margin=dict(l=10, r=20, t=45, b=10),
                     template='plotly_white', plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
                     legend=dict(orientation='h', y=-0.15, x=0.5, xanchor='center',
                         font=dict(size=10, color='#64748b', family='Outfit')),
@@ -798,9 +798,16 @@ if st.session_state.logged_in:
                     is_behind = delta_days > 0
                     pace_color = '#ef4444' if is_behind else '#10b981'
 
-                    # X-axis end: stretch to whichever is later among forecast/planned end
-                    x_end = max([d for d in [forecast_end, planned_end] if pd.notna(d)] + [cum_df['Date'].max() if len(cum_df) else today])
-                    x_end = x_end + pd.Timedelta(days=3)
+                    # X-axis end: stretch past the latest milestone (forecast or planned),
+                    # and add a generous buffer so the Progress Forecast card always fits
+                    # to the right of the forecast vertical line.
+                    latest_event = max([d for d in [forecast_end, planned_end] if pd.notna(d)]
+                                       + [cum_df['Date'].max() if len(cum_df) else today])
+                    total_span_days = max(1, (latest_event - dc_start).days)
+                    # Reserve ~35% of the span (min 25 days) as blank space on the right
+                    # — this is where the forecast card sits.
+                    buffer_days = max(25, int(total_span_days * 0.35))
+                    x_end = latest_event + pd.Timedelta(days=buffer_days)
 
                     # Plotly's add_vline does `Timestamp + int` internally on newer pandas
                     # which now raises — pass ISO strings instead of pd.Timestamps.
@@ -901,17 +908,20 @@ if st.session_state.logged_in:
                     )
 
                     fig_cum.add_annotation(
-                        xref='paper', yref='paper', x=0.015, y=0.985,
+                        xref='x', yref='paper',
+                        x=forecast_end, y=0.98,
                         xanchor='left', yanchor='top',
+                        xshift=10,  # small visual gap after the forecast line
                         text=info_html, showarrow=False, align='left',
                         font=dict(size=11, family='Outfit', color='#0f172a'),
-                        bgcolor='rgba(255,255,255,0.92)', bordercolor='#e2e8f0',
+                        bgcolor='rgba(255,255,255,0.95)', bordercolor='#e2e8f0',
                         borderwidth=1, borderpad=10)
 
                     fig_cum.update_layout(
                         title=dict(text='Cumulative Progress & Forecast',
                                    font=dict(size=14, weight=900, family='Outfit')),
-                        height=max(340, 50 * len(dm_chart)),
+                        height=max(420, 50 * len(dm_chart)),
+                        autosize=True,
                         margin=dict(l=45, r=25, t=55, b=20),
                         template='plotly_white',
                         plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
