@@ -734,28 +734,28 @@ if st.session_state.logged_in:
                     orientation='h', marker_color='#10b981', width=bar_width,
                     customdata=np.stack([dmp['Approved data'], dmp['Target']], axis=-1),
                     text=_labels(dmp['pct_approved']), textposition='inside',
-                    insidetextfont=dict(color='white', size=11, family='Outfit'),
+                    insidetextfont=dict(color='white', size=14, family='Outfit'),
                     hovertemplate='<b>%{y}</b><br>Approved: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
                     y=dmp['Tool'], x=dmp['pct_rejected'], name='Rejected',
                     orientation='h', marker_color='#ef4444', width=bar_width,
                     customdata=np.stack([dmp['Rejected data'], dmp['Target']], axis=-1),
                     text=_labels(dmp['pct_rejected']), textposition='inside',
-                    insidetextfont=dict(color='white', size=11, family='Outfit'),
+                    insidetextfont=dict(color='white', size=14, family='Outfit'),
                     hovertemplate='<b>%{y}</b><br>Rejected: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
                     y=dmp['Tool'], x=dmp['pct_awaiting'], name='Awaiting QA',
                     orientation='h', marker_color='#f59e0b', width=bar_width,
                     customdata=np.stack([dmp['Awaiting review'], dmp['Target']], axis=-1),
                     text=_labels(dmp['pct_awaiting']), textposition='inside',
-                    insidetextfont=dict(color='white', size=11, family='Outfit'),
+                    insidetextfont=dict(color='white', size=14, family='Outfit'),
                     hovertemplate='<b>%{y}</b><br>Awaiting: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
                     y=dmp['Tool'], x=dmp['pct_remaining'], name='Not Received',
                     orientation='h', marker_color='#e2e8f0', width=bar_width,
                     customdata=np.stack([dmp['remaining_abs'], dmp['Target']], axis=-1),
                     text=_labels(dmp['pct_remaining']), textposition='inside',
-                    insidetextfont=dict(color='#64748b', size=11, family='Outfit'),
+                    insidetextfont=dict(color='#64748b', size=14, family='Outfit'),
                     hovertemplate='<b>%{y}</b><br>Not received: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
 
                 # Ensure x-axis fits even if over-collected (>100%)
