@@ -709,34 +709,86 @@ if st.session_state.logged_in:
         with chart_col1:
             with st.container(border=True):
                 dm_chart = data_metrics[data_metrics['Tool'] != 'All Tools'].copy() if 'All Tools' in data_metrics['Tool'].values else data_metrics.copy()
-                dm_chart = dm_chart.sort_values('Target', ascending=True)
+                dm_chart = dm_chart.sort_values('Target', ascending=True).reset_index(drop=True)
+
+                # ── Compute category percentages of each tool's target ──
+                dmp = dm_chart.copy()
+                dmp['target_safe'] = dmp['Target'].replace(0, 1)
+                dmp['remaining_abs'] = (dmp['Target'] - dmp['Received data']).clip(lower=0)
+                dmp['pct_approved']  = (dmp['Approved data']  / dmp['target_safe'] * 100).fillna(0)
+                dmp['pct_rejected']  = (dmp['Rejected data']  / dmp['target_safe'] * 100).fillna(0)
+                dmp['pct_awaiting']  = (dmp['Awaiting review']/ dmp['target_safe'] * 100).fillna(0)
+                dmp['pct_remaining'] = (dmp['remaining_abs']  / dmp['target_safe'] * 100).fillna(0)
+
+                # Only label segments large enough to hold the text
+                def _labels(series, min_pct=7):
+                    return [f"{v:.0f}%" if v >= min_pct else "" for v in series]
+
+                n_tools = max(1, len(dmp))
+                # Narrow bar thickness so a single-tool chart doesn't look like a billboard
+                bar_width = 0.45
+
                 fig_tool = go.Figure()
                 fig_tool.add_trace(go.Bar(
-                    y=dm_chart['Tool'], x=dm_chart['Approved data'], name='Approved',
-                    orientation='h', marker_color='#10b981',
-                    hovertemplate='<b>%{y}</b><br>Approved: %{x}<extra></extra>'))
+                    y=dmp['Tool'], x=dmp['pct_approved'], name='Approved',
+                    orientation='h', marker_color='#10b981', width=bar_width,
+                    customdata=np.stack([dmp['Approved data'], dmp['Target']], axis=-1),
+                    text=_labels(dmp['pct_approved']), textposition='inside',
+                    insidetextfont=dict(color='white', size=11, family='Outfit'),
+                    hovertemplate='<b>%{y}</b><br>Approved: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
-                    y=dm_chart['Tool'], x=dm_chart['Rejected data'], name='Rejected',
-                    orientation='h', marker_color='#ef4444',
-                    hovertemplate='<b>%{y}</b><br>Rejected: %{x}<extra></extra>'))
+                    y=dmp['Tool'], x=dmp['pct_rejected'], name='Rejected',
+                    orientation='h', marker_color='#ef4444', width=bar_width,
+                    customdata=np.stack([dmp['Rejected data'], dmp['Target']], axis=-1),
+                    text=_labels(dmp['pct_rejected']), textposition='inside',
+                    insidetextfont=dict(color='white', size=11, family='Outfit'),
+                    hovertemplate='<b>%{y}</b><br>Rejected: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
-                    y=dm_chart['Tool'], x=dm_chart['Awaiting review'], name='Awaiting QA',
-                    orientation='h', marker_color='#f59e0b',
-                    hovertemplate='<b>%{y}</b><br>Awaiting: %{x}<extra></extra>'))
-                remaining_per_tool = (dm_chart['Target'] - dm_chart['Received data']).clip(lower=0)
+                    y=dmp['Tool'], x=dmp['pct_awaiting'], name='Awaiting QA',
+                    orientation='h', marker_color='#f59e0b', width=bar_width,
+                    customdata=np.stack([dmp['Awaiting review'], dmp['Target']], axis=-1),
+                    text=_labels(dmp['pct_awaiting']), textposition='inside',
+                    insidetextfont=dict(color='white', size=11, family='Outfit'),
+                    hovertemplate='<b>%{y}</b><br>Awaiting: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
-                    y=dm_chart['Tool'], x=remaining_per_tool, name='Not Received',
-                    orientation='h', marker_color='#e2e8f0',
-                    hovertemplate='<b>%{y}</b><br>Not received: %{x}<extra></extra>'))
+                    y=dmp['Tool'], x=dmp['pct_remaining'], name='Not Received',
+                    orientation='h', marker_color='#e2e8f0', width=bar_width,
+                    customdata=np.stack([dmp['remaining_abs'], dmp['Target']], axis=-1),
+                    text=_labels(dmp['pct_remaining']), textposition='inside',
+                    insidetextfont=dict(color='#64748b', size=11, family='Outfit'),
+                    hovertemplate='<b>%{y}</b><br>Not received: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
+
+                # Ensure x-axis fits even if over-collected (>100%)
+                stack_max = float((dmp['pct_approved'] + dmp['pct_rejected']
+                                   + dmp['pct_awaiting'] + dmp['pct_remaining']).max() or 100)
+                x_max = max(100, stack_max) + 3
+
+                # Height: scales with n_tools, narrow when only one is selected
+                tool_chart_height = max(220, 90 + 70 * n_tools)
+
                 fig_tool.update_layout(
-                    barmode='stack', title=dict(text='Progress by Tool', font=dict(size=14, weight=900, family='Outfit')),
-                    height=max(420, 50 * len(dm_chart)), margin=dict(l=10, r=20, t=45, b=10),
-                    template='plotly_white', plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-                    legend=dict(orientation='h', y=-0.15, x=0.5, xanchor='center',
+                    barmode='stack',
+                    title=dict(text='Progress by Tool (% of target)',
+                               font=dict(size=14, weight=900, family='Outfit')),
+                    height=tool_chart_height,
+                    margin=dict(l=10, r=20, t=50, b=40),
+                    template='plotly_white',
+                    plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+                    bargap=0.35,
+                    legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center',
                         font=dict(size=10, color='#64748b', family='Outfit')),
-                    xaxis=dict(gridcolor='rgba(0,0,0,0.04)', title=''),
-                    yaxis=dict(gridcolor='rgba(0,0,0,0)', title=''),
+                    xaxis=dict(range=[0, x_max], ticksuffix='%',
+                               gridcolor='rgba(0,0,0,0.04)', title='',
+                               tickfont=dict(size=10, color='#64748b', family='Outfit')),
+                    yaxis=dict(gridcolor='rgba(0,0,0,0)', title='',
+                               tickfont=dict(size=11, color='#0f172a', family='Outfit')),
                     font=dict(family='Outfit, sans-serif'))
+
+                # Subtle reference line at 100% target
+                fig_tool.add_shape(type='line', xref='x', yref='paper',
+                    x0=100, x1=100, y0=0, y1=1,
+                    line=dict(color='#0f766e', width=1.2, dash='dot'), opacity=0.5)
+
                 st.plotly_chart(fig_tool, use_container_width=True)
 
         with chart_col2:
@@ -798,16 +850,12 @@ if st.session_state.logged_in:
                     is_behind = delta_days > 0
                     pace_color = '#ef4444' if is_behind else '#10b981'
 
-                    # X-axis end: stretch past the latest milestone (forecast or planned),
-                    # and add a generous buffer so the Progress Forecast card always fits
-                    # to the right of the forecast vertical line.
+                    # X-axis end: small buffer past the latest milestone.
+                    # The forecast card sits INSIDE the plot area (left of the forecast
+                    # vertical line), so no extra horizontal padding is needed.
                     latest_event = max([d for d in [forecast_end, planned_end] if pd.notna(d)]
                                        + [cum_df['Date'].max() if len(cum_df) else today])
-                    total_span_days = max(1, (latest_event - dc_start).days)
-                    # Reserve ~35% of the span (min 25 days) as blank space on the right
-                    # — this is where the forecast card sits.
-                    buffer_days = max(25, int(total_span_days * 0.35))
-                    x_end = latest_event + pd.Timedelta(days=buffer_days)
+                    x_end = latest_event + pd.Timedelta(days=5)
 
                     # Plotly's add_vline does `Timestamp + int` internally on newer pandas
                     # which now raises — pass ISO strings instead of pd.Timestamps.
@@ -909,18 +957,26 @@ if st.session_state.logged_in:
 
                     fig_cum.add_annotation(
                         xref='x', yref='paper',
-                        x=forecast_end, y=0.98,
-                        xanchor='left', yanchor='top',
-                        xshift=10,  # small visual gap after the forecast line
+                        x=forecast_end, y=0.04,
+                        xanchor='right', yanchor='bottom',
+                        xshift=-10,  # small visual gap left of the forecast line
                         text=info_html, showarrow=False, align='left',
                         font=dict(size=11, family='Outfit', color='#0f172a'),
                         bgcolor='rgba(255,255,255,0.95)', bordercolor='#e2e8f0',
                         borderwidth=1, borderpad=10)
 
+                    # Y-axis: fit whichever is higher — the target or the tallest actual
+                    # point — so the line and target are always visible.
+                    y_peak = max(float(total_target), float(cum_df['cumulative'].max()) if len(cum_df) else 0.0)
+                    y_max = y_peak * 1.10 if y_peak > 0 else 1
+
+                    # Match the tool chart's height formula so both columns stay aligned
+                    cum_chart_height = max(420, 90 + 70 * n_tools)
+
                     fig_cum.update_layout(
                         title=dict(text='Cumulative Progress & Forecast',
                                    font=dict(size=14, weight=900, family='Outfit')),
-                        height=max(420, 50 * len(dm_chart)),
+                        height=cum_chart_height,
                         autosize=True,
                         margin=dict(l=45, r=25, t=55, b=20),
                         template='plotly_white',
@@ -931,7 +987,7 @@ if st.session_state.logged_in:
                         xaxis=dict(gridcolor='rgba(0,0,0,0.03)', title='',
                                    range=[(dc_start - pd.Timedelta(days=1)).strftime('%Y-%m-%d'), x_end_s]),
                         yaxis=dict(gridcolor='rgba(0,0,0,0.05)', title='Cumulative Submissions',
-                                   range=[0, total_target * 1.08]),
+                                   range=[0, y_max]),
                         font=dict(family='Outfit, sans-serif'),
                         hovermode='x unified')
                     st.plotly_chart(fig_cum, use_container_width=True)
