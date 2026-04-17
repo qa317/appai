@@ -764,7 +764,7 @@ if st.session_state.logged_in:
                 x_max = max(100, stack_max) + 3
 
                 # Fixed height so both charts match the timeline/map row
-                tool_chart_height = 400
+                tool_chart_height = 320
 
                 fig_tool.update_layout(
                     barmode='stack',
