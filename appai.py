@@ -827,8 +827,13 @@ if st.session_state.logged_in:
                     planned_start = _pdate('Planned Data Collection-Start')
                     planned_end   = _pdate('Planned Data Collection-End')
                     actual_start  = _pdate('Data Collection-Start')
+                    actual_end    = _pdate('Data Collection-End')
 
                     today = pd.Timestamp.today().normalize()
+                    # If DC has an actual end date, collection is officially closed —
+                    # no forecasting needed, just show the final state.
+                    dc_complete = pd.notna(actual_end)
+
                     # Anchor start: actual > first submission > planned
                     if pd.notna(actual_start):
                         dc_start = actual_start
@@ -837,21 +842,25 @@ if st.session_state.logged_in:
                     else:
                         dc_start = planned_start if pd.notna(planned_start) else today
 
-                    # Average per day so far (fallback to 20 if none yet)
-                    days_elapsed = max(1, (today - dc_start).days)
+                    # Average per day (achieved, or being achieved)
+                    pace_anchor = actual_end if dc_complete else today
+                    days_elapsed = max(1, (pace_anchor - dc_start).days)
                     avg_per_day = total_received / days_elapsed if days_elapsed > 0 else 0
                     est_used = False
-                    if avg_per_day <= 0:
+                    if avg_per_day <= 0 and not dc_complete:
                         avg_per_day = 20
                         est_used = True
 
-                    # Forecast end date at current pace
+                    # Forecast end date at current pace (only meaningful if DC is still running)
                     remaining = max(0, total_target - total_received)
-                    days_to_finish = (remaining / avg_per_day) if avg_per_day > 0 else 0
-                    forecast_end = today + pd.Timedelta(days=int(np.ceil(days_to_finish)))
+                    if dc_complete:
+                        forecast_end = actual_end
+                    else:
+                        days_to_finish = (remaining / avg_per_day) if avg_per_day > 0 else 0
+                        forecast_end = today + pd.Timedelta(days=int(np.ceil(days_to_finish)))
 
-                    # Required pace to hit planned end date
-                    if pd.notna(planned_end):
+                    # Required pace to hit planned end date (only when still running)
+                    if pd.notna(planned_end) and not dc_complete:
                         days_left_plan = (planned_end - today).days
                         if days_left_plan > 0:
                             required_avg = remaining / days_left_plan
@@ -862,7 +871,9 @@ if st.session_state.logged_in:
                         required_avg = None
 
                     # Delta vs plan
-                    if pd.notna(planned_end):
+                    if dc_complete and pd.notna(planned_end):
+                        delta_days = (actual_end - planned_end).days
+                    elif pd.notna(planned_end):
                         delta_days = (forecast_end - planned_end).days
                     else:
                         delta_days = 0
@@ -870,10 +881,10 @@ if st.session_state.logged_in:
                     pace_color = '#ef4444' if is_behind else '#10b981'
 
                     # X-axis end: small buffer past the latest milestone.
-                    # The forecast card sits INSIDE the plot area (left of the forecast
-                    # vertical line), so no extra horizontal padding is needed.
-                    latest_event = max([d for d in [forecast_end, planned_end] if pd.notna(d)]
-                                       + [cum_df['Date'].max() if len(cum_df) else today])
+                    candidates = [d for d in [forecast_end, planned_end, actual_end] if pd.notna(d)]
+                    if len(cum_df):
+                        candidates.append(cum_df['Date'].max())
+                    latest_event = max(candidates) if candidates else today
                     x_end = latest_event + pd.Timedelta(days=5)
 
                     # Plotly's add_vline does `Timestamp + int` internally on newer pandas
@@ -911,13 +922,15 @@ if st.session_state.logged_in:
                             hovertemplate='<b>Last submission</b><br>%{x|%d %b %Y}<br>Received: <b>%{y:,}</b><extra></extra>'))
 
                     # ── Stall segment ──
-                    # If the last submission is before today AND collection isn't complete,
-                    # draw a flat dashed line across the gap so the pause is visible.
+                    # If the last submission is before today AND collection isn't complete
+                    # (neither target-complete nor officially ended), draw a flat dashed
+                    # line across the gap so the pause is visible.
                     last_sub_date = cum_df['Date'].max() if len(cum_df) else None
                     stall_days = (today - last_sub_date).days if last_sub_date is not None else 0
                     is_stalled = (last_sub_date is not None
                                   and stall_days >= 1
-                                  and total_received < total_target)
+                                  and total_received < total_target
+                                  and not dc_complete)
                     if is_stalled:
                         fig_cum.add_trace(go.Scatter(
                             x=[last_sub_date, today],
@@ -927,13 +940,14 @@ if st.session_state.logged_in:
                             line=dict(color='#94a3b8', width=2, dash='dot'),
                             hovertemplate='<b>No submissions</b><br>%{x|%d %b %Y}<extra></extra>'))
 
-                    # Current-pace projection: from today → forecast_end hitting target
-                    fig_cum.add_trace(go.Scatter(
-                        x=[today, forecast_end], y=[total_received, total_target],
-                        name=f'Current pace · {avg_per_day:.0f}/day',
-                        mode='lines',
-                        line=dict(color=pace_color, width=2.3, dash='dash'),
-                        hovertemplate='<b>Current-pace projection</b><br>%{x|%d %b %Y} → %{y:,}<extra></extra>'))
+                    # Current-pace projection: only when DC is still running
+                    if not dc_complete:
+                        fig_cum.add_trace(go.Scatter(
+                            x=[today, forecast_end], y=[total_received, total_target],
+                            name=f'Current pace · {avg_per_day:.0f}/day',
+                            mode='lines',
+                            line=dict(color=pace_color, width=2.3, dash='dash'),
+                            hovertemplate='<b>Current-pace projection</b><br>%{x|%d %b %Y} → %{y:,}<extra></extra>'))
 
                     # Planned end vertical line (use add_shape — add_vline has a bug
                     # doing numeric arithmetic on date x-values in some plotly versions)
@@ -949,27 +963,47 @@ if st.session_state.logged_in:
                             text=f'Planned end<br>{planned_end:%d %b}',
                             font=dict(size=9, color='#6366f1', family='Outfit'))
 
-                    # Forecast end vertical line
-                    fig_cum.add_shape(
-                        type='line', xref='x', yref='paper',
-                        x0=forecast_end, x1=forecast_end, y0=0, y1=1,
-                        line=dict(color=pace_color, width=1.2, dash='dash'),
-                        opacity=0.7)
-                    fig_cum.add_annotation(
-                        xref='x', yref='paper', x=forecast_end, y=0.0,
-                        yanchor='top', xanchor='center', showarrow=False,
-                        text=f'Forecast<br>{forecast_end:%d %b}',
-                        font=dict(size=9, color=pace_color, family='Outfit'))
+                    # Forecast / Actual end vertical line
+                    if dc_complete:
+                        fig_cum.add_shape(
+                            type='line', xref='x', yref='paper',
+                            x0=actual_end, x1=actual_end, y0=0, y1=1,
+                            line=dict(color=pace_color, width=1.5, dash='solid'),
+                            opacity=0.8)
+                        fig_cum.add_annotation(
+                            xref='x', yref='paper', x=actual_end, y=0.0,
+                            yanchor='top', xanchor='center', showarrow=False,
+                            text=f'Actual end<br>{actual_end:%d %b}',
+                            font=dict(size=9, color=pace_color, family='Outfit'))
+                    else:
+                        fig_cum.add_shape(
+                            type='line', xref='x', yref='paper',
+                            x0=forecast_end, x1=forecast_end, y0=0, y1=1,
+                            line=dict(color=pace_color, width=1.2, dash='dash'),
+                            opacity=0.7)
+                        fig_cum.add_annotation(
+                            xref='x', yref='paper', x=forecast_end, y=0.0,
+                            yanchor='top', xanchor='center', showarrow=False,
+                            text=f'Forecast<br>{forecast_end:%d %b}',
+                            font=dict(size=9, color=pace_color, family='Outfit'))
 
-                    # Today dotted vertical
-                    fig_cum.add_shape(
-                        type='line', xref='x', yref='paper',
-                        x0=today, x1=today, y0=0, y1=1,
-                        line=dict(color='#0f172a', width=1, dash='dot'),
-                        opacity=0.25)
+                    # Today dotted vertical (only while DC is running)
+                    if not dc_complete:
+                        fig_cum.add_shape(
+                            type='line', xref='x', yref='paper',
+                            x0=today, x1=today, y0=0, y1=1,
+                            line=dict(color='#0f172a', width=1, dash='dot'),
+                            opacity=0.25)
 
                     # Status badge text
-                    if pd.notna(planned_end):
+                    if dc_complete and pd.notna(planned_end):
+                        if delta_days > 0:
+                            status_txt = f"<b style='color:#ef4444'>⚠ Finished {delta_days}d late</b>"
+                        elif delta_days < 0:
+                            status_txt = f"<b style='color:#10b981'>✓ Finished {abs(delta_days)}d early</b>"
+                        else:
+                            status_txt = f"<b style='color:#10b981'>✓ Finished on time</b>"
+                    elif pd.notna(planned_end):
                         if delta_days > 0:
                             status_txt = f"<b style='color:#ef4444'>⚠ {delta_days}d behind</b>"
                         elif delta_days < 0:
@@ -979,23 +1013,38 @@ if st.session_state.logged_in:
                     else:
                         status_txt = "<b style='color:#64748b'>No planned end</b>"
 
-                    est_tag = " <span style='color:#94a3b8;font-size:9px'>(est.)</span>" if est_used else ""
-                    req_line = (f"<b>Required:</b>&nbsp;<span style='color:#6366f1'>{required_avg:.1f}/day</span><br>"
-                                if required_avg is not None else "")
-
-                    info_html = (
-                        f"<span style='font-size:10px;color:#64748b;font-weight:700;letter-spacing:0.06em;text-transform:uppercase'>PROGRESS FORECAST</span><br>"
-                        f"<b>Current pace:</b>&nbsp;<span style='color:#0f766e'>{avg_per_day:.1f}/day{est_tag}</span><br>"
-                        f"{req_line}"
-                        f"<b>Forecast end:</b>&nbsp;<span style='color:{pace_color}'>{forecast_end:%d %b %Y}</span><br>"
-                        f"{status_txt}"
-                    )
+                    if dc_complete:
+                        # Closed collection — report final state, no forecast
+                        duration_days = max(1, (actual_end - dc_start).days)
+                        completion_pct = (total_received / total_target * 100) if total_target else 0
+                        info_html = (
+                            f"<span style='font-size:10px;color:#64748b;font-weight:700;letter-spacing:0.06em;text-transform:uppercase'>DATA COLLECTION · CLOSED</span><br>"
+                            f"<b>Final:</b>&nbsp;<span style='color:#0f766e'>{total_received:,} / {total_target:,} ({completion_pct:.1f}%)</span><br>"
+                            f"<b>Duration:</b>&nbsp;{duration_days} days<br>"
+                            f"<b>Avg pace:</b>&nbsp;<span style='color:#0f766e'>{avg_per_day:.1f}/day</span><br>"
+                            f"<b>Actual end:</b>&nbsp;<span style='color:{pace_color}'>{actual_end:%d %b %Y}</span><br>"
+                            f"{status_txt}"
+                        )
+                        card_x_anchor = actual_end
+                    else:
+                        # Running collection — show forecast
+                        est_tag = " <span style='color:#94a3b8;font-size:9px'>(est.)</span>" if est_used else ""
+                        req_line = (f"<b>Required:</b>&nbsp;<span style='color:#6366f1'>{required_avg:.1f}/day</span><br>"
+                                    if required_avg is not None else "")
+                        info_html = (
+                            f"<span style='font-size:10px;color:#64748b;font-weight:700;letter-spacing:0.06em;text-transform:uppercase'>PROGRESS FORECAST</span><br>"
+                            f"<b>Current pace:</b>&nbsp;<span style='color:#0f766e'>{avg_per_day:.1f}/day{est_tag}</span><br>"
+                            f"{req_line}"
+                            f"<b>Forecast end:</b>&nbsp;<span style='color:{pace_color}'>{forecast_end:%d %b %Y}</span><br>"
+                            f"{status_txt}"
+                        )
+                        card_x_anchor = forecast_end
 
                     fig_cum.add_annotation(
                         xref='x', yref='paper',
-                        x=forecast_end, y=0.04,
+                        x=card_x_anchor, y=0.04,
                         xanchor='right', yanchor='bottom',
-                        xshift=-10,  # small visual gap left of the forecast line
+                        xshift=-10,  # small visual gap left of the anchor line
                         text=info_html, showarrow=False, align='left',
                         font=dict(size=11, family='Outfit', color='#0f172a'),
                         bgcolor='rgba(255,255,255,0.95)', bordercolor='#e2e8f0',
@@ -1009,8 +1058,9 @@ if st.session_state.logged_in:
                     # Fixed height, matching the tool chart beside it
                     cum_chart_height = 320
 
+                    cum_title = 'Cumulative Progress · Closed' if dc_complete else 'Cumulative Progress & Forecast'
                     fig_cum.update_layout(
-                        title=dict(text='Cumulative Progress & Forecast',
+                        title=dict(text=cum_title,
                                    font=dict(size=14, weight=900, family='Outfit')),
                         height=cum_chart_height,
                         autosize=True,
