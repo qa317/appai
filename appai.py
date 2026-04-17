@@ -837,15 +837,6 @@ if st.session_state.logged_in:
                         line=dict(color=pace_color, width=2.3, dash='dash'),
                         hovertemplate='<b>Current-pace projection</b><br>%{x|%d %b %Y} → %{y:,}<extra></extra>'))
 
-                    # Required-pace line: from today → planned_end hitting target
-                    if pd.notna(planned_end) and required_avg is not None:
-                        fig_cum.add_trace(go.Scatter(
-                            x=[today, planned_end], y=[total_received, total_target],
-                            name=f'Required · {required_avg:.0f}/day',
-                            mode='lines',
-                            line=dict(color='#6366f1', width=2.3, dash='dot'),
-                            hovertemplate='<b>Required to meet deadline</b><br>%{x|%d %b %Y} → %{y:,}<extra></extra>'))
-
                     # Planned end vertical line (use add_shape — add_vline has a bug
                     # doing numeric arithmetic on date x-values in some plotly versions)
                     if pd.notna(planned_end):
