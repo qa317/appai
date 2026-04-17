@@ -846,27 +846,38 @@ if st.session_state.logged_in:
                             line=dict(color='#6366f1', width=2.3, dash='dot'),
                             hovertemplate='<b>Required to meet deadline</b><br>%{x|%d %b %Y} → %{y:,}<extra></extra>'))
 
-                    # Planned end vertical line
+                    # Planned end vertical line (use add_shape — add_vline has a bug
+                    # doing numeric arithmetic on date x-values in some plotly versions)
                     if pd.notna(planned_end):
-                        fig_cum.add_vline(
-                            x=planned_end_s, line_dash='dash', line_color='#6366f1',
-                            line_width=1.2, opacity=0.7,
-                            annotation_text=f'Planned end<br>{planned_end:%d %b}',
-                            annotation_position='top',
-                            annotation_font=dict(size=9, color='#6366f1', family='Outfit'))
+                        fig_cum.add_shape(
+                            type='line', xref='x', yref='paper',
+                            x0=planned_end, x1=planned_end, y0=0, y1=1,
+                            line=dict(color='#6366f1', width=1.2, dash='dash'),
+                            opacity=0.7)
+                        fig_cum.add_annotation(
+                            xref='x', yref='paper', x=planned_end, y=1.0,
+                            yanchor='bottom', xanchor='center', showarrow=False,
+                            text=f'Planned end<br>{planned_end:%d %b}',
+                            font=dict(size=9, color='#6366f1', family='Outfit'))
 
                     # Forecast end vertical line
-                    fig_cum.add_vline(
-                        x=forecast_end_s, line_dash='dash', line_color=pace_color,
-                        line_width=1.2, opacity=0.7,
-                        annotation_text=f'Forecast<br>{forecast_end:%d %b}',
-                        annotation_position='bottom',
-                        annotation_font=dict(size=9, color=pace_color, family='Outfit'))
+                    fig_cum.add_shape(
+                        type='line', xref='x', yref='paper',
+                        x0=forecast_end, x1=forecast_end, y0=0, y1=1,
+                        line=dict(color=pace_color, width=1.2, dash='dash'),
+                        opacity=0.7)
+                    fig_cum.add_annotation(
+                        xref='x', yref='paper', x=forecast_end, y=0.0,
+                        yanchor='top', xanchor='center', showarrow=False,
+                        text=f'Forecast<br>{forecast_end:%d %b}',
+                        font=dict(size=9, color=pace_color, family='Outfit'))
 
                     # Today dotted vertical
-                    fig_cum.add_vline(
-                        x=today_s, line_dash='dot', line_color='#0f172a',
-                        line_width=1, opacity=0.25)
+                    fig_cum.add_shape(
+                        type='line', xref='x', yref='paper',
+                        x0=today, x1=today, y0=0, y1=1,
+                        line=dict(color='#0f172a', width=1, dash='dot'),
+                        opacity=0.25)
 
                     # Status badge text
                     if pd.notna(planned_end):
