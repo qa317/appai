@@ -1003,7 +1003,7 @@ if st.session_state.logged_in:
         with colii1:
             with st.container(border=True):
                 st.markdown("### Geographic Coverage")
-                st_folium(m, height=320, use_container_width=True, returned_objects=[], key="afg_map")
+                st_folium(m, height=300, use_container_width=True, returned_objects=[], key="afg_map")
         with colii2:
             with st.container(border=True):
                 st.markdown("### Submission Timeline")
