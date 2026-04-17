@@ -781,7 +781,7 @@ if st.session_state.logged_in:
                                gridcolor='rgba(0,0,0,0.04)', title='',
                                tickfont=dict(size=10, color='#64748b', family='Outfit')),
                     yaxis=dict(gridcolor='rgba(0,0,0,0)', title='',
-                               tickfont=dict(size=11, color='#0f172a', family='Outfit')),
+                               tickfont=dict(size=14, color='#0f172a', family='Outfit')),
                     font=dict(family='Outfit, sans-serif'))
 
                 # Subtle reference line at 100% target
