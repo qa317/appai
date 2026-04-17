@@ -1,22 +1,32 @@
 [theme]
 base = "light"
 
-# General color setup
+# ─── Colors ───────────────────────────────────────
 textColor = "#0f172a"
 primaryColor = "#0f766e"
-backgroundColor = "#f4f5f7"
+backgroundColor = "#f8fafc"
 secondaryBackgroundColor = "#ffffff"
 
-# Widgets
+# ─── Widgets ──────────────────────────────────────
 showWidgetBorder = true
 borderColor = "#e2e8f0"
 
-# Base text
+# ─── Body text ────────────────────────────────────
 font = "'Outfit':https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
 baseFontWeight = 400
 baseFontSize = 14
 
-# Heading text
+# ─── Headings ─────────────────────────────────────
 headingFont = "'Outfit':https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
-headingFontWeights = [700, 300, 700]
-headingFontSizes = ["2.5rem", "1.75rem", "1rem"]
+headingFontWeights = [800, 700, 700]
+headingFontSizes = ["2rem", "1.5rem", "1rem"]
+
+# ─── Code font ────────────────────────────────────
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+
+[client]
+toolbarMode = "minimal"
+showSidebarNavigation = true
+
+[server]
+enableStaticServing = true
