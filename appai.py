@@ -235,19 +235,6 @@ user_dict = df_users.set_index("users")[["password", "project"]].to_dict(orient=
 def convert_df_to_csv(dataframe):
     return dataframe.to_csv(index=False, encoding='utf-8')
 
-def filtered_dataframe(df_input, key="fdf"):
-    """Display a dataframe with Streamlit-native per-column filters for categorical columns."""
-    df_display = df_input.copy()
-    cat_cols = [c for c in df_display.columns if df_display[c].nunique() <= 30 and df_display[c].nunique() > 1]
-    if cat_cols:
-        filter_cols = st.columns(min(len(cat_cols), 4))
-        for i, col in enumerate(cat_cols[:4]):
-            with filter_cols[i % len(filter_cols)]:
-                opts = sorted(df_display[col].dropna().unique().tolist(), key=str)
-                sel = st.multiselect(col, opts, default=opts, key=f"{key}_{col}")
-                df_display = df_display[df_display[col].isin(sel)]
-    st.dataframe(df_display, hide_index=True, use_container_width=True)
-
 # ──────────────────────────────────────────────
 # AUTH
 # ──────────────────────────────────────────────
@@ -758,7 +745,7 @@ if st.session_state.logged_in:
 
         # ── SAMPLE TRACKING TABLE ──
         st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
-        filtered_dataframe(data_metrics, key="sample_tracking")
+        st.dataframe(data_metrics, hide_index=True, use_container_width=True)
 
         # ── GEOGRAPHIC COVERAGE + SUBMISSION TIMELINE ──
         colii1, colii2 = st.columns(2)
@@ -807,7 +794,7 @@ if st.session_state.logged_in:
                     summary = pd.DataFrame({'Total_Target': total_target_s, 'Received_Data': received_data_s}).fillna(0).astype(int)
                     summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
                     summary['Completed ✅'] = (summary['Received_Data'] == summary['Total_Target']).apply(lambda x: '✅' if x else '❌')
-                    filtered_dataframe(summary.reset_index(), key="dc_summary")
+                    st.dataframe(summary)
         with col4:
             with st.container(border=True):
                 disag = st.multiselect('Dataset Summary', tall.columns.tolist(), default=def_var1, help='Create summaries based on selected columns.')
@@ -819,7 +806,7 @@ if st.session_state.logged_in:
                     else:
                         disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
                         disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
-                    filtered_dataframe(disag_t, key="dataset_summary")
+                    st.dataframe(disag_t)
         if 'tall2' in locals():
             disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,
                 help='For phone surveys where multiple attempts to reach respondents may be necessary.')
@@ -831,7 +818,7 @@ if st.session_state.logged_in:
                 else:
                     disag_traw = tall2.groupby(disag_raw).size().unstack(disag_raw[-1], fill_value=0).reset_index()
                     disag_traw.loc['Total'] = disag_traw.sum(numeric_only=True)
-                st.dataframe(disag_traw, hide_index=True, use_container_width=True)
+                st.dataframe(disag_traw)
 
     # ── UPDATE LOGS ──
     def parse_log(log_text):
