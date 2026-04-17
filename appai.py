@@ -776,7 +776,7 @@ if st.session_state.logged_in:
                     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
                     bargap=0.35,
                     legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center',
-                        font=dict(size=12, color='#64748b', family='Outfit')),
+                        font=dict(size=11, color='#64748b', family='Outfit')),
                     xaxis=dict(range=[0, x_max], ticksuffix='%',
                                gridcolor='rgba(0,0,0,0.04)', title='',
                                tickfont=dict(size=10, color='#64748b', family='Outfit')),
