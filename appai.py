@@ -235,6 +235,78 @@ user_dict = df_users.set_index("users")[["password", "project"]].to_dict(orient=
 def convert_df_to_csv(dataframe):
     return dataframe.to_csv(index=False, encoding='utf-8')
 
+def filterable_table(df_input, key="ft", height=400):
+    """Render a DataFrame as an HTML table with per-column dropdown filters."""
+    df_t = df_input.reset_index(drop=True)
+    cols = df_t.columns.tolist()
+    rows_json = df_t.fillna("").astype(str).values.tolist()
+    import json as _json
+    cols_js = _json.dumps(cols)
+    rows_js = _json.dumps(rows_json)
+    html = f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap');
+    *{{box-sizing:border-box;margin:0;padding:0}}
+    body{{font-family:'Outfit',sans-serif;background:transparent}}
+    .ft-wrap{{width:100%;overflow-x:auto}}
+    .ft-filters{{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}}
+    .ft-filters select{{
+      padding:6px 10px;border:1px solid #e2e8f0;border-radius:10px;
+      font-size:11px;font-family:'Outfit',sans-serif;background:#fff;
+      color:#334155;font-weight:600;max-width:180px;cursor:pointer;
+    }}
+    .ft-filters select:focus{{outline:none;border-color:#0f766e}}
+    table{{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}}
+    thead th{{
+      position:sticky;top:0;z-index:2;
+      background:#f8fafc;color:#64748b;font-size:10px;font-weight:700;
+      text-transform:uppercase;letter-spacing:.08em;
+      padding:10px 12px;border-bottom:2px solid #e2e8f0;text-align:left;
+      white-space:nowrap;
+    }}
+    tbody td{{
+      padding:9px 12px;border-bottom:1px solid #f1f5f9;color:#0f172a;
+      font-family:'JetBrains Mono',monospace;font-size:12px;
+    }}
+    tbody tr:hover{{background:rgba(15,118,110,0.04)}}
+    .ft-count{{font-size:11px;color:#94a3b8;margin-top:6px;font-weight:600}}
+    </style>
+    <div class="ft-wrap">
+      <div class="ft-filters" id="filters_{key}"></div>
+      <div style="max-height:{height-60}px;overflow:auto">
+        <table><thead><tr id="thead_{key}"></tr></thead><tbody id="tbody_{key}"></tbody></table>
+      </div>
+      <div class="ft-count" id="count_{key}"></div>
+    </div>
+    <script>
+    (function(){{
+      const cols={cols_js};
+      const rows={rows_js};
+      const fDiv=document.getElementById('filters_{key}');
+      const thead=document.getElementById('thead_{key}');
+      const tbody=document.getElementById('tbody_{key}');
+      const countEl=document.getElementById('count_{key}');
+      const filters={{}};
+      cols.forEach((c,i)=>{{
+        thead.innerHTML+=`<th>${{c}}</th>`;
+        const vals=[...new Set(rows.map(r=>r[i]))].sort();
+        if(vals.length>1 && vals.length<=50){{
+          const sel=document.createElement('select');
+          sel.innerHTML=`<option value="">All ${{c}}</option>`+vals.map(v=>`<option value="${{v}}">${{v}}</option>`).join('');
+          sel.addEventListener('change',()=>{{filters[i]=sel.value;render()}});
+          fDiv.appendChild(sel);
+        }}
+      }});
+      function render(){{
+        const filtered=rows.filter(r=>Object.keys(filters).every(k=>!filters[k]||r[k]===filters[k]));
+        tbody.innerHTML=filtered.map(r=>'<tr>'+r.map(c=>`<td>${{c}}</td>`).join('')+'</tr>').join('');
+        countEl.textContent=filtered.length+' of '+rows.length+' rows';
+      }}
+      render();
+    }})();
+    </script>"""
+    components.html(html, height=height, scrolling=False)
+
 # ──────────────────────────────────────────────
 # AUTH
 # ──────────────────────────────────────────────
@@ -745,7 +817,7 @@ if st.session_state.logged_in:
 
         # ── SAMPLE TRACKING TABLE ──
         st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
-        st.dataframe(data_metrics, hide_index=True, use_container_width=True)
+        filterable_table(data_metrics, key="sample_tracking", height=min(400, 100 + 35 * len(data_metrics)))
 
         # ── GEOGRAPHIC COVERAGE + SUBMISSION TIMELINE ──
         colii1, colii2 = st.columns(2)
