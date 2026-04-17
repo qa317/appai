@@ -231,8 +231,8 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVertica
 
 /* Streamlit Overrides */
 .stSelectbox label, .stMultiSelect label { font-size: 12px !important; font-weight: 700 !important; color: var(--text-muted) !important; text-transform: uppercase; letter-spacing: 0.06em; }
-.stDataFrame { border-radius: 14px !important; overflow: visible; box-shadow: var(--shadow) !important; background: var(--glass) !important; }
-div[data-testid="stExpander"] { border: 1px solid var(--border) !important; border-radius: 16px !important; overflow: visible; background: var(--glass) !important; backdrop-filter: blur(6px) !important; }
+.stDataFrame { border-radius: 14px !important; overflow: hidden; box-shadow: var(--shadow) !important; background: var(--glass) !important; }
+div[data-testid="stExpander"] { border: 1px solid var(--border) !important; border-radius: 16px !important; overflow: hidden; background: var(--glass) !important; backdrop-filter: blur(6px) !important; }
 div[data-testid="stExpander"] summary { font-weight: 700 !important; }
 .stDownloadButton button { border-radius: 12px !important; font-weight: 600 !important; }
 .js-plotly-plot .plotly { border-radius: 14px; }
@@ -258,6 +258,13 @@ def load_data():
 
 df, df_tools, df_users = load_data()
 user_dict = df_users.set_index("users")[["password", "project"]].to_dict(orient="index")
+
+# Cached per-URL loader for project-specific Google Sheets (raw submissions,
+# QA log, sampling sheet). Avoids re-downloading + re-parsing on every filter
+# click. TTL matches load_data() so all data ages together.
+@st.cache_data(ttl=120, show_spinner=False)
+def fetch_csv(url: str) -> pd.DataFrame:
+    return pd.read_csv(url)
 
 def convert_df_to_csv(dataframe):
     return dataframe.to_csv(index=False, encoding='utf-8')
@@ -545,10 +552,10 @@ if st.session_state.logged_in:
             Project_QA_ID3 = project_data['HFC_ID'][0]
             raw_sheet_id = rawsheet.split('/d/')[1].split('/')[0]
             csv_url_raw = f"https://docs.google.com/spreadsheets/d/{raw_sheet_id}/export?format=csv&id={raw_sheet_id}&gid=0"
-            t = pd.read_csv(csv_url_raw)
+            t = fetch_csv(csv_url_raw).copy()
             t['KEY_Unique'] = t['KEY']
             qasheet = "https://docs.google.com/spreadsheets/d/1V1SfBZUwHN0NtXFIoiXEh7JGkpTUOLZnGAfFN8QVXYQ/export?format=csv&" + Project_QA_ID2
-            qalog = pd.read_csv(qasheet)
+            qalog = fetch_csv(qasheet)
             t = pd.merge(t, qalog[['QA_Status','KEY_Unique']].drop_duplicates('KEY_Unique'), on='KEY_Unique', how='left')
             t['QA_Status'] = t['QA_Status'].replace('', "Not QA'ed Yet")
             t['QA_Status'] = t['QA_Status'].fillna("Not QA'ed Yet")
@@ -567,7 +574,7 @@ if st.session_state.logged_in:
             t['occurance'] = t['occurance'].fillna(9999).astype(int)
             t['V_ID'] = t.apply(compute_vid, axis=1)
             samplingsheet = "https://docs.google.com/spreadsheets/d/1U0Y7TQnTFEg1edMb0IHejOxv9S2YLY2UH-tp1qzXyBg/export?format=csv&" + Project_QA_ID
-            tari = pd.read_csv(samplingsheet)
+            tari = fetch_csv(samplingsheet).copy()
             tari['V_ID'] = tari['Tool'] + "/" + tari['V_ID']
             tari = tari[tari['Skipped'] != "Yes"]
             tari = tari[(tari["Tool"].isin(t["Tool"].unique())) & (tari["Tool"].isin(project_data_tools["Tool"]))]
