@@ -971,7 +971,7 @@ if st.session_state.logged_in:
                     y_max = y_peak * 1.10 if y_peak > 0 else 1
 
                     # Fixed height, matching the tool chart beside it
-                    cum_chart_height = 400
+                    cum_chart_height = 320
 
                     fig_cum.update_layout(
                         title=dict(text='Cumulative Progress & Forecast',
@@ -1003,7 +1003,7 @@ if st.session_state.logged_in:
         with colii1:
             with st.container(border=True):
                 st.markdown("### Geographic Coverage")
-                st_folium(m, height=300, use_container_width=True, returned_objects=[], key="afg_map")
+                st_folium(m, height=320, use_container_width=True, returned_objects=[], key="afg_map")
         with colii2:
             with st.container(border=True):
                 st.markdown("### Submission Timeline")
