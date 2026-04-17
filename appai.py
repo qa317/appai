@@ -231,8 +231,8 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVertica
 
 /* Streamlit Overrides */
 .stSelectbox label, .stMultiSelect label { font-size: 12px !important; font-weight: 700 !important; color: var(--text-muted) !important; text-transform: uppercase; letter-spacing: 0.06em; }
-.stDataFrame { border-radius: 14px !important; overflow: hidden; box-shadow: var(--shadow) !important; background: var(--glass) !important; }
-div[data-testid="stExpander"] { border: 1px solid var(--border) !important; border-radius: 16px !important; overflow: hidden; background: var(--glass) !important; backdrop-filter: blur(6px) !important; }
+.stDataFrame { border-radius: 14px !important; overflow: visible; box-shadow: var(--shadow) !important; background: var(--glass) !important; }
+div[data-testid="stExpander"] { border: 1px solid var(--border) !important; border-radius: 16px !important; overflow: visible; background: var(--glass) !important; backdrop-filter: blur(6px) !important; }
 div[data-testid="stExpander"] summary { font-weight: 700 !important; }
 .stDownloadButton button { border-radius: 12px !important; font-weight: 600 !important; }
 .js-plotly-plot .plotly { border-radius: 14px; }
