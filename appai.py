@@ -725,8 +725,10 @@ if st.session_state.logged_in:
                     return [f"{v:.0f}%" if v >= min_pct else "" for v in series]
 
                 n_tools = max(1, len(dmp))
-                # Narrow bar thickness so a single-tool chart doesn't look like a billboard
-                bar_width = 0.45
+                # Bar thickness: narrow when only 1-2 tools (so a single bar doesn't
+                # dominate a 400px chart), thicker when many tools (so label fits).
+                bar_width = 0.45 if n_tools <= 2 else 0.75
+                bar_gap   = 0.45 if n_tools <= 2 else 0.18
 
                 fig_tool = go.Figure()
                 fig_tool.add_trace(go.Bar(
@@ -734,28 +736,28 @@ if st.session_state.logged_in:
                     orientation='h', marker_color='#10b981', width=bar_width,
                     customdata=np.stack([dmp['Approved data'], dmp['Target']], axis=-1),
                     text=_labels(dmp['pct_approved']), textposition='inside',
-                    insidetextfont=dict(color='white', size=14, family='Outfit'),
+                    insidetextfont=dict(color='white', size=11, family='Outfit'),
                     hovertemplate='<b>%{y}</b><br>Approved: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
                     y=dmp['Tool'], x=dmp['pct_rejected'], name='Rejected',
                     orientation='h', marker_color='#ef4444', width=bar_width,
                     customdata=np.stack([dmp['Rejected data'], dmp['Target']], axis=-1),
                     text=_labels(dmp['pct_rejected']), textposition='inside',
-                    insidetextfont=dict(color='white', size=14, family='Outfit'),
+                    insidetextfont=dict(color='white', size=11, family='Outfit'),
                     hovertemplate='<b>%{y}</b><br>Rejected: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
                     y=dmp['Tool'], x=dmp['pct_awaiting'], name='Awaiting QA',
                     orientation='h', marker_color='#f59e0b', width=bar_width,
                     customdata=np.stack([dmp['Awaiting review'], dmp['Target']], axis=-1),
                     text=_labels(dmp['pct_awaiting']), textposition='inside',
-                    insidetextfont=dict(color='white', size=14, family='Outfit'),
+                    insidetextfont=dict(color='white', size=11, family='Outfit'),
                     hovertemplate='<b>%{y}</b><br>Awaiting: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
                 fig_tool.add_trace(go.Bar(
                     y=dmp['Tool'], x=dmp['pct_remaining'], name='Not Received',
                     orientation='h', marker_color='#e2e8f0', width=bar_width,
                     customdata=np.stack([dmp['remaining_abs'], dmp['Target']], axis=-1),
                     text=_labels(dmp['pct_remaining']), textposition='inside',
-                    insidetextfont=dict(color='#64748b', size=14, family='Outfit'),
+                    insidetextfont=dict(color='#64748b', size=11, family='Outfit'),
                     hovertemplate='<b>%{y}</b><br>Not received: %{x:.1f}%<br>%{customdata[0]:,} of %{customdata[1]:,}<extra></extra>'))
 
                 # Ensure x-axis fits even if over-collected (>100%)
@@ -772,11 +774,14 @@ if st.session_state.logged_in:
                                font=dict(size=14, weight=900, family='Outfit')),
                     height=tool_chart_height,
                     margin=dict(l=10, r=20, t=50, b=40),
+                    # Enforce a readable minimum font size. 'hide' drops labels that
+                    # don't fit rather than shrinking them to unreadable sizes.
+                    uniformtext=dict(minsize=11, mode='hide'),
                     template='plotly_white',
                     plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-                    bargap=0.35,
+                    bargap=bar_gap,
                     legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center',
-                        font=dict(size=11, color='#64748b', family='Outfit')),
+                        font=dict(size=10, color='#64748b', family='Outfit')),
                     xaxis=dict(range=[0, x_max], ticksuffix='%',
                                gridcolor='rgba(0,0,0,0.04)', title='',
                                tickfont=dict(size=10, color='#64748b', family='Outfit')),
