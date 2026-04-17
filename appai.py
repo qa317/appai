@@ -795,6 +795,15 @@ if st.session_state.logged_in:
                     x_end = max([d for d in [forecast_end, planned_end] if pd.notna(d)] + [cum_df['Date'].max() if len(cum_df) else today])
                     x_end = x_end + pd.Timedelta(days=3)
 
+                    # Plotly's add_vline does `Timestamp + int` internally on newer pandas
+                    # which now raises — pass ISO strings instead of pd.Timestamps.
+                    _fmt = lambda d: d.strftime('%Y-%m-%d') if pd.notna(d) else None
+                    today_s        = _fmt(today)
+                    forecast_end_s = _fmt(forecast_end)
+                    planned_end_s  = _fmt(planned_end)
+                    dc_start_s     = _fmt(dc_start)
+                    x_end_s        = _fmt(x_end)
+
                     fig_cum = go.Figure()
 
                     # Target horizontal line
@@ -840,7 +849,7 @@ if st.session_state.logged_in:
                     # Planned end vertical line
                     if pd.notna(planned_end):
                         fig_cum.add_vline(
-                            x=planned_end, line_dash='dash', line_color='#6366f1',
+                            x=planned_end_s, line_dash='dash', line_color='#6366f1',
                             line_width=1.2, opacity=0.7,
                             annotation_text=f'Planned end<br>{planned_end:%d %b}',
                             annotation_position='top',
@@ -848,7 +857,7 @@ if st.session_state.logged_in:
 
                     # Forecast end vertical line
                     fig_cum.add_vline(
-                        x=forecast_end, line_dash='dash', line_color=pace_color,
+                        x=forecast_end_s, line_dash='dash', line_color=pace_color,
                         line_width=1.2, opacity=0.7,
                         annotation_text=f'Forecast<br>{forecast_end:%d %b}',
                         annotation_position='bottom',
@@ -856,7 +865,7 @@ if st.session_state.logged_in:
 
                     # Today dotted vertical
                     fig_cum.add_vline(
-                        x=today, line_dash='dot', line_color='#0f172a',
+                        x=today_s, line_dash='dot', line_color='#0f172a',
                         line_width=1, opacity=0.25)
 
                     # Status badge text
@@ -901,7 +910,7 @@ if st.session_state.logged_in:
                             font=dict(size=10, color='#64748b', family='Outfit'),
                             bgcolor='rgba(0,0,0,0)'),
                         xaxis=dict(gridcolor='rgba(0,0,0,0.03)', title='',
-                                   range=[dc_start - pd.Timedelta(days=1), x_end]),
+                                   range=[(dc_start - pd.Timedelta(days=1)).strftime('%Y-%m-%d'), x_end_s]),
                         yaxis=dict(gridcolor='rgba(0,0,0,0.05)', title='Cumulative Submissions',
                                    range=[0, total_target * 1.08]),
                         font=dict(family='Outfit, sans-serif'),
