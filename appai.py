@@ -764,7 +764,7 @@ if st.session_state.logged_in:
                 x_max = max(100, stack_max) + 3
 
                 # Height: scales with n_tools, narrow when only one is selected
-                tool_chart_height = max(220, 90 + 70 * n_tools)
+                tool_chart_height = max(180, 50 + 45 * n_tools)
 
                 fig_tool.update_layout(
                     barmode='stack',
@@ -971,7 +971,7 @@ if st.session_state.logged_in:
                     y_max = y_peak * 1.10 if y_peak > 0 else 1
 
                     # Match the tool chart's height formula so both columns stay aligned
-                    cum_chart_height = max(420, 90 + 70 * n_tools)
+                    cum_chart_height = max(320, 50 + 45 * n_tools)
 
                     fig_cum.update_layout(
                         title=dict(text='Cumulative Progress & Forecast',
