@@ -763,8 +763,8 @@ if st.session_state.logged_in:
                                    + dmp['pct_awaiting'] + dmp['pct_remaining']).max() or 100)
                 x_max = max(100, stack_max) + 3
 
-                # Height: scales with n_tools, narrow when only one is selected
-                tool_chart_height = max(180, 50 + 45 * n_tools)
+                # Fixed height so both charts match the timeline/map row
+                tool_chart_height = 400
 
                 fig_tool.update_layout(
                     barmode='stack',
@@ -970,8 +970,8 @@ if st.session_state.logged_in:
                     y_peak = max(float(total_target), float(cum_df['cumulative'].max()) if len(cum_df) else 0.0)
                     y_max = y_peak * 1.10 if y_peak > 0 else 1
 
-                    # Match the tool chart's height formula so both columns stay aligned
-                    cum_chart_height = max(320, 50 + 45 * n_tools)
+                    # Fixed height, matching the tool chart beside it
+                    cum_chart_height = 400
 
                     fig_cum.update_layout(
                         title=dict(text='Cumulative Progress & Forecast',
