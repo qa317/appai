@@ -644,7 +644,7 @@ if st.session_state.logged_in:
                 tooltip=folium.GeoJsonTooltip(fields=["NAME_1", "VISITS"], aliases=["Province:", "Visits:"], sticky=True)).add_to(m)
             return m
 
-        counts = t.groupby("Province").size().reset_index(name="count")
+        counts = tall.groupby("Province").size().reset_index(name="count")
         counts["Province"] = counts["Province"].astype(str).str.strip()
         counts = counts[["Province", "count"]]
         geo_raw = load_geojson("afghanistan_provinces.geojson")
