@@ -6,4 +6,4 @@ plotly
 folium
 streamlit_folium
 numpy
-streamlit-aggrid
+streamlit-aggrid==1.0.5
