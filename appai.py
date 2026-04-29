@@ -460,7 +460,7 @@ if st.session_state.logged_in:
             allow_unsafe_jscode=True,
             fit_columns_on_grid_load=True,
             custom_css=custom_css,
-            enable_enterprise_modules=False
+            enable_enterprise_modules=False,
             key=key,
         )
     def delay_days(plan_end, actual_end):
