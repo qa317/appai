@@ -1190,7 +1190,7 @@ if st.session_state.logged_in:
                     else:
                         disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
                         disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
-                    st.dataframe(disag_t)
+                    excel_like_table(disag_t, key="sample_summary_grid", height=380)
         if 'tall2' in locals():
             disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,
                 help='For phone surveys where multiple attempts to reach respondents may be necessary.')
@@ -1235,7 +1235,7 @@ if st.session_state.logged_in:
                 </div>{"<div class='upd-sep'></div>" if i < len(days)-1 else ""}""", unsafe_allow_html=True)
 
     # ── SURVEYOR REPORT (ECD / EFSP) ──
-    if main_project in ['ECD', 'EFSP']:
+    if main_project in ['ECD', 'EFSP','EMERGe']:
         sr = st.button("Generate Surveyor Performance Report", key="create_report_btn", type="primary")
         if sr and main_project in ['ECD', 'EFSP']:
             qalog2 = pd.merge(tall, qalog[['Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved', 'KEY_Unique']], on='KEY_Unique', how='left')
