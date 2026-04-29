@@ -1202,7 +1202,8 @@ if st.session_state.logged_in:
                 else:
                     disag_traw = tall2.groupby(disag_raw).size().unstack(disag_raw[-1], fill_value=0).reset_index()
                     disag_traw.loc['Total'] = disag_traw.sum(numeric_only=True)
-                st.dataframe(disag_traw)
+            
+                excel_like_table(disag_traw, key="tryouts_grid", height=380)
 
     # ── UPDATE LOGS ──
     def parse_log(log_text):
