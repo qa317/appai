@@ -1165,7 +1165,7 @@ if st.session_state.logged_in:
         with col3:
             with st.container(border=True):
                 disag2 = st.multiselect('Sample Summary', tari.columns.tolist(), def_var0,
-                                        help='Create summaries based on selected columns.')
+                                        help='Create summaries based on selected columns, for download, please right-click and export!')
                 if disag2:
                     st.markdown("**DC Progress Summary**")
                     total_target_s  = tari.fillna('NAN').groupby(disag2).size()
