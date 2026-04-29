@@ -311,8 +311,8 @@ if not st.session_state.logged_in:
             <h2>ATR Consulting</h2>
             <div class="sub">Data Collection & QA Progress Tracker</div>
         </div>""", unsafe_allow_html=True)
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        username = st.text_input("Username").strip()
+        password = st.text_input("Password", type="password").strip()
         submit = st.form_submit_button("Sign In", use_container_width=True)
         st.markdown("""<div class="login-about-card">
             <h4>About This App</h4>
