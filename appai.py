@@ -1118,10 +1118,6 @@ if st.session_state.logged_in:
                 else:
                     st.info("No submission dates available for cumulative chart.")
 
-        # ── SAMPLE TRACKING TABLE ──
-        st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
-        st.dataframe(data_metrics, hide_index=True, use_container_width=True)
-
         # ── GEOGRAPHIC COVERAGE + SUBMISSION TIMELINE ──
         colii1, colii2 = st.columns(2)
         with colii1:
@@ -1132,6 +1128,10 @@ if st.session_state.logged_in:
             with st.container(border=True):
                 st.markdown("### Submission Timeline")
                 st.plotly_chart(fig_timeline, use_container_width=True)
+
+        # ── SAMPLE TRACKING TABLE ──
+        st.markdown('<div class="section-label">Sample Tracking</div>', unsafe_allow_html=True)
+        st.dataframe(data_metrics, hide_index=True, use_container_width=True)
 
         t = t[t['QA_Status'].isin(qastatus)]
         m_df = tari[~tari.V_ID.isin(t.V_ID)]
