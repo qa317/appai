@@ -603,7 +603,7 @@ if st.session_state.logged_in:
             if extra_code != '-':
                 exec(extra_code)
             t['SubmissionDate'] = pd.to_datetime(t['SubmissionDate'], errors='coerce')
-            t = t.sort_values(by=['Completion_status', 'QA_Status'], ascending=True)
+            t = t.sort_values(by=['Completion_status', 'QA_Status','SubmissionDate'], ascending=[ True, True,False])
             t['occurance'] = None
             for tool, cols in tool_col_map.items():
                 group_cols = [c for c in cols.split('-') if c != 'occurance']
@@ -649,6 +649,9 @@ if st.session_state.logged_in:
         tall['Date'] = pd.to_datetime(tall['Date'])
         tall['Date'] = tall['Date'].dt.strftime('%Y-%m-%d')
         tall = tall.drop(columns=['SubmissionDate', 'occurance', 'd1', 'd2'])
+
+        tari['Date'] = pd.to_datetime(tari['SubmissionDate'], format='mixed', errors='coerce').dt.date
+        tari.drop(columns='SubmissionDate', inplace=True)
 
         dff = tall['Date'].value_counts().reset_index()
         dff.columns = ['Date', 'N']
