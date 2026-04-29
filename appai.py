@@ -649,7 +649,7 @@ if st.session_state.logged_in:
             Project_QA_ID = project_data['Sampling_ID'][0]
             Project_QA_ID2 = project_data['QAlog_ID'][0]
             Project_QA_ID3 = project_data['HFC_ID'][0]
-            geocenter = project_data['Geo-center'][0]
+            geocenter = project_data['geocenter'][0]
             raw_sheet_id = rawsheet.split('/d/')[1].split('/')[0]
             csv_url_raw = f"https://docs.google.com/spreadsheets/d/{raw_sheet_id}/export?format=csv&id={raw_sheet_id}&gid=0"
             t = fetch_csv(csv_url_raw).copy()
@@ -737,7 +737,7 @@ if st.session_state.logged_in:
             for feat in geo["features"]:
                 name = feat["properties"].get("NAME_1")
                 feat["properties"]["VISITS"] = int(count_map.get(name, 0))
-            m = folium.Map(location=[34.5, 66.0], zoom_start=5, tiles="CartoDB positron")
+            m = folium.Map(location=json.loads(geocenter), zoom_start=5, tiles="CartoDB positron")
             folium.Choropleth(geo_data=geo, data=counts_df, columns=["Province", "count"],
                 key_on="feature.properties.NAME_1", fill_color="YlGnBu",
                 fill_opacity=0.8, line_opacity=0.25, nan_fill_color="#EAEAEA",
