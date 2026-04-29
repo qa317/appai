@@ -10,6 +10,7 @@ from streamlit_folium import st_folium
 import copy
 import re
 import numpy as np
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 st.set_page_config(layout="wide", page_title="ATR Dashboard", page_icon="📊")
 
@@ -363,6 +364,43 @@ if st.session_state.logged_in:
 
     def to_dt(x):
         return pd.to_datetime(x, dayfirst=True, errors="coerce")
+
+    def excel_like_table(df, key, height=350):
+      """Render a dataframe with Excel-style per-column filters, sort, resize."""
+      df = df.reset_index() if df.index.name or any(df.index.names) else df.copy()
+  
+      gob = GridOptionsBuilder.from_dataframe(df)
+      gob.configure_default_column(
+          filter=True,            # enables filter icon on every column
+          sortable=True,
+          resizable=True,
+          floatingFilter=True,    # the always-visible filter row under headers
+          editable=False,
+      )
+      # Use 'set' filter (the Excel-style checkbox list) for object cols,
+      # numeric/date filters for the rest — agGrid picks automatically when
+      # you pass these per-type filters:
+      for col in df.columns:
+          if pd.api.types.is_numeric_dtype(df[col]):
+              gob.configure_column(col, filter="agNumberColumnFilter")
+          elif pd.api.types.is_datetime64_any_dtype(df[col]):
+              gob.configure_column(col, filter="agDateColumnFilter")
+          else:
+              gob.configure_column(col, filter="agSetColumnFilter")  # checkbox list
+  
+      gob.configure_grid_options(domLayout='normal')
+      grid_options = gob.build()
+  
+      return AgGrid(
+          df,
+          gridOptions=grid_options,
+          height=height,
+          theme="streamlit",                 # matches your light theme
+          update_mode=GridUpdateMode.NO_UPDATE,
+          allow_unsafe_jscode=True,
+          fit_columns_on_grid_load=True,
+          key=key,
+      )
     def delay_days(plan_end, actual_end):
         if pd.notna(plan_end) and pd.notna(actual_end):
             d = (actual_end - plan_end).days
@@ -1121,17 +1159,24 @@ if st.session_state.logged_in:
         st.markdown('<div class="section-label">Summary Generation</div>', unsafe_allow_html=True)
         st.info('Summaries include both "Complete" and "Incomplete" submissions by default. Select only "Complete" for accurate sample tracking.')
         col3, col4 = st.columns(2)
+
         with col3:
             with st.container(border=True):
-                disag2 = st.multiselect('Sample Summary', tari.columns.tolist(), def_var0, help='Create summaries based on selected columns.')
+                disag2 = st.multiselect('Sample Summary', tari.columns.tolist(), def_var0,
+                                        help='Create summaries based on selected columns.')
                 if disag2:
                     st.markdown("**DC Progress Summary**")
-                    total_target_s = tari.fillna('NAN').groupby(disag2).size()
+                    total_target_s  = tari.fillna('NAN').groupby(disag2).size()
                     received_data_s = tari.fillna('NAN')[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
-                    summary = pd.DataFrame({'Total_Target': total_target_s, 'Received_Data': received_data_s}).fillna(0).astype(int)
+                    summary = pd.DataFrame({
+                        'Total_Target': total_target_s,
+                        'Received_Data': received_data_s
+                    }).fillna(0).astype(int)
                     summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
-                    summary['Completed ✅'] = (summary['Received_Data'] == summary['Total_Target']).apply(lambda x: '✅' if x else '❌')
-                    st.dataframe(summary)
+                    summary['Completed ✅'] = (summary['Received_Data'] == summary['Total_Target'])\
+                                              .apply(lambda x: '✅' if x else '❌')
+        
+                    excel_like_table(summary, key="sample_summary_grid", height=380)
         with col4:
             with st.container(border=True):
                 disag = st.multiselect('Dataset Summary', tall.columns.tolist(), default=def_var1, help='Create summaries based on selected columns.')
