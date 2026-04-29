@@ -1161,7 +1161,11 @@ if st.session_state.logged_in:
         col3, col4 = st.columns(2)
         st.write("AgGrid test:")
         AgGrid(pd.DataFrame({"a": [1, 2, 3], "b": ["x", "y", "z"]}), height=200, key="test")
-
+        try:
+            from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+            st.success("AgGrid imported OK")
+        except Exception as e:
+            st.error(f"AgGrid import failed: {e}")
         with col3:
             with st.container(border=True):
                 disag2 = st.multiselect('Sample Summary', tari.columns.tolist(), def_var0,
