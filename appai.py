@@ -392,41 +392,76 @@ if st.session_state.logged_in:
         return pd.to_datetime(x, dayfirst=True, errors="coerce")
 
     def excel_like_table(df, key, height=350):
-      """Render a dataframe with Excel-style per-column filters, sort, resize."""
-      df = df.reset_index() if df.index.name or any(df.index.names) else df.copy()
-  
-      gob = GridOptionsBuilder.from_dataframe(df)
-      gob.configure_default_column(
-          filter=True,            # enables filter icon on every column
-          sortable=True,
-          resizable=True,
-          floatingFilter=True,    # the always-visible filter row under headers
-          editable=False,
-      )
-      # Use 'set' filter (the Excel-style checkbox list) for object cols,
-      # numeric/date filters for the rest — agGrid picks automatically when
-      # you pass these per-type filters:
-      for col in df.columns:
-          if pd.api.types.is_numeric_dtype(df[col]):
-              gob.configure_column(col, filter="agNumberColumnFilter")
-          elif pd.api.types.is_datetime64_any_dtype(df[col]):
-              gob.configure_column(col, filter="agDateColumnFilter")
-          else:
-              gob.configure_column(col, filter="agSetColumnFilter")  # checkbox list
-  
-      gob.configure_grid_options(domLayout='normal')
-      grid_options = gob.build()
-  
-      return AgGrid(
-          df,
-          gridOptions=grid_options,
-          height=height,
-          theme="streamlit",                 # matches your light theme
-          update_mode=GridUpdateMode.NO_UPDATE,
-          allow_unsafe_jscode=True,
-          fit_columns_on_grid_load=True,
-          key=key,
-      )
+        """Render a dataframe with Excel-style per-column filters, sort, resize."""
+        df = df.reset_index() if df.index.name or any(df.index.names) else df.copy()
+    
+        gob = GridOptionsBuilder.from_dataframe(df)
+        gob.configure_default_column(
+            filter=True,
+            sortable=True,
+            resizable=True,
+            floatingFilter=True,
+            editable=False,
+        )
+        for col in df.columns:
+            if pd.api.types.is_numeric_dtype(df[col]):
+                gob.configure_column(col, filter="agNumberColumnFilter")
+            elif pd.api.types.is_datetime64_any_dtype(df[col]):
+                gob.configure_column(col, filter="agDateColumnFilter")
+            else:
+                gob.configure_column(col, filter="agSetColumnFilter")
+    
+        gob.configure_grid_options(domLayout='normal')
+        grid_options = gob.build()
+    
+        # Injected INTO the AgGrid iframe — page-level CSS can't reach it
+        custom_css = {
+            ".ag-root-wrapper": {
+                "background-color": "#f1f5f9 !important",
+                "border": "1px solid #e2e8f0 !important",
+                "border-radius": "12px !important",
+            },
+            ".ag-header": {
+                "background-color": "#e2e8f0 !important",
+                "border-bottom": "1px solid #cbd5e1 !important",
+            },
+            ".ag-row": {
+                "background-color": "transparent !important",
+            },
+            ".ag-row-odd": {
+                "background-color": "rgba(255,255,255,0.4) !important",
+            },
+            ".ag-row-hover": {
+                "background-color": "rgba(15,118,110,0.08) !important",
+            },
+            ".ag-header-cell, .ag-header-group-cell": {
+                "background-color": "transparent !important",
+                "color": "#0f172a !important",
+                "font-weight": "700 !important",
+            },
+            ".ag-cell": {
+                "color": "#0f172a !important",
+            },
+            ".ag-floating-filter, .ag-header-row-floating-filter": {
+                "background-color": "#e2e8f0 !important",
+            },
+            ".ag-paging-panel": {
+                "background-color": "#f1f5f9 !important",
+                "border-top": "1px solid #e2e8f0 !important",
+            },
+        }
+    
+        return AgGrid(
+            df,
+            gridOptions=grid_options,
+            height=height,
+            theme="streamlit",
+            update_mode=GridUpdateMode.NO_UPDATE,
+            allow_unsafe_jscode=True,
+            fit_columns_on_grid_load=True,
+            custom_css=custom_css,
+            key=key,
+        )
     def delay_days(plan_end, actual_end):
         if pd.notna(plan_end) and pd.notna(actual_end):
             d = (actual_end - plan_end).days
