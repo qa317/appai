@@ -1193,6 +1193,7 @@ if st.session_state.logged_in:
                         disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
                     st.dataframe(disag_t)
         if 'tall2' in locals():
+          disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,help='For phone surveys where multiple attempts to reach respondents may be necessary.')
           if disag_raw:
               st.markdown("**Raw Data (Tryouts)**")
               if len(disag_raw) == 1:
