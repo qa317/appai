@@ -1159,13 +1159,6 @@ if st.session_state.logged_in:
         st.markdown('<div class="section-label">Summary Generation</div>', unsafe_allow_html=True)
         st.info('Summaries include both "Complete" and "Incomplete" submissions by default. Select only "Complete" for accurate sample tracking.')
         col3, col4 = st.columns(2)
-        st.write("AgGrid test:")
-        AgGrid(pd.DataFrame({"a": [1, 2, 3], "b": ["x", "y", "z"]}), height=200, key="test")
-        try:
-            from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
-            st.success("AgGrid imported OK")
-        except Exception as e:
-            st.error(f"AgGrid import failed: {e}")
         with col3:
             with st.container(border=True):
                 disag2 = st.multiselect('Sample Summary', tari.columns.tolist(), def_var0,
