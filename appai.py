@@ -649,6 +649,7 @@ if st.session_state.logged_in:
             Project_QA_ID = project_data['Sampling_ID'][0]
             Project_QA_ID2 = project_data['QAlog_ID'][0]
             Project_QA_ID3 = project_data['HFC_ID'][0]
+            geocenter = project_data['Geo-center'][0]
             raw_sheet_id = rawsheet.split('/d/')[1].split('/')[0]
             csv_url_raw = f"https://docs.google.com/spreadsheets/d/{raw_sheet_id}/export?format=csv&id={raw_sheet_id}&gid=0"
             t = fetch_csv(csv_url_raw).copy()
