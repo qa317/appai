@@ -339,7 +339,7 @@ if st.session_state.logged_in:
     <div class="hero-banner">
         <div>
             <h1>Data Collection & QA Dashboard</h1>
-            <div class="hero-sub">ATR Consulting · Progress Tracker</div>
+            <div class="hero-sub">ATR Consulting · Progress Tracker | Updates in Real Time</div>
         </div>
         <div class="hero-badge">
             <span class="dot"></span>
