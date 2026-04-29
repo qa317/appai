@@ -1193,17 +1193,15 @@ if st.session_state.logged_in:
                         disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
                     st.dataframe(disag_t)
         if 'tall2' in locals():
-            disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,
-                help='For phone surveys where multiple attempts to reach respondents may be necessary.')
-            if disag_raw:
-                st.markdown("**Raw Data (Tryouts)**")
-                if len(disag_raw) == 1:
-                    disag_traw = tall2.groupby(disag_raw).size().reset_index().rename(columns={0: 'N'})
-                    disag_traw.loc[len(disag_traw)] = ['Total', disag_traw['N'].sum()]
-                else:
-                    disag_traw = tall2.groupby(disag_raw).size().unstack(disag_raw[-1], fill_value=0).reset_index()
-                    disag_traw.loc['Total'] = disag_traw.sum(numeric_only=True)
-                st.dataframe(disag_traw)
+          if disag_raw:
+              st.markdown("**Raw Data (Tryouts)**")
+              if len(disag_raw) == 1:
+                  disag_traw = tall2.groupby(disag_raw).size().reset_index().rename(columns={0: 'N'})
+                  disag_traw.loc[len(disag_traw)] = ['Total', disag_traw['N'].sum()]
+              else:
+                  disag_traw = tall2.groupby(disag_raw).size().unstack(disag_raw[-1], fill_value=0).reset_index()
+                  disag_traw.loc['Total'] = disag_traw.sum(numeric_only=True)
+              excel_like_table(disag_traw, key="tryouts_summary_grid", height=380)
 
     # ── UPDATE LOGS ──
     def parse_log(log_text):
