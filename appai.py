@@ -674,7 +674,7 @@ if st.session_state.logged_in:
             t['V_ID'] = t.apply(compute_vid, axis=1)
             samplingsheet = "https://docs.google.com/spreadsheets/d/1U0Y7TQnTFEg1edMb0IHejOxv9S2YLY2UH-tp1qzXyBg/export?format=csv&" + Project_QA_ID
             tari = fetch_csv(samplingsheet).copy()
-            tari['V_ID'] = tari['Tool'] + "/" + tari['V_ID'].astype(str)
+            tari['V_ID'] = tari['Tool'] + "/" + tari['V_ID'].astype(str).str.replace(r'\.0$', '', regex=True)
             tari = tari[tari['Skipped'] != "Yes"]
             tari = tari[(tari["Tool"].isin(t["Tool"].unique())) & (tari["Tool"].isin(project_data_tools["Tool"]))]
             df_free = t[t["Tool"].isin(project_data_tools["Tool"]) & ~t["Tool"].isin(tari["Tool"])].copy()
