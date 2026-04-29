@@ -1179,6 +1179,7 @@ if st.session_state.logged_in:
                                               .apply(lambda x: '✅' if x else '❌')
         
                     excel_like_table(summary, key="sample_summary_grid", height=380)
+
         with col4:
             with st.container(border=True):
                 disag = st.multiselect('Dataset Summary', tall.columns.tolist(), default=def_var1, help='Create summaries based on selected columns.')
@@ -1190,7 +1191,7 @@ if st.session_state.logged_in:
                     else:
                         disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
                         disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
-                    excel_like_table(disag_t, key="sample_summary_grid", height=380)
+                    st.dataframe(disag_t)
         if 'tall2' in locals():
             disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,
                 help='For phone surveys where multiple attempts to reach respondents may be necessary.')
