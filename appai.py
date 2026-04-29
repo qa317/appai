@@ -44,7 +44,6 @@ div[data-testid="stMetric"],
 /* ── Make dataframe toolbar (download/search/fullscreen) visible on hover ── */
 div[data-testid="stDataFrame"],
 div[data-testid="stDataFrameResizable"] { position: relative; }
-
 div[data-testid="stDataFrame"] [data-testid="stElementToolbar"],
 div[data-testid="stDataFrameResizable"] [data-testid="stElementToolbar"],
 [data-testid="stElementToolbar"] {
@@ -74,6 +73,33 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(> div[data-testid="stVertica
   backdrop-filter: blur(8px) !important;
   border: 1px solid var(--glass-border) !important;
   border-radius: 18px !important;
+}
+
+/* ── AgGrid: match frosted-glass look of st.dataframe ── */
+.ag-theme-streamlit,
+.ag-theme-streamlit-dark {
+  --ag-background-color: transparent !important;
+  --ag-odd-row-background-color: rgba(255,255,255,0.35) !important;
+  --ag-header-background-color: rgba(241,245,249,0.7) !important;
+  --ag-border-color: var(--border) !important;
+  --ag-row-hover-color: rgba(15,118,110,0.06) !important;
+}
+.ag-theme-streamlit .ag-root-wrapper,
+.ag-theme-streamlit .ag-root,
+.ag-theme-streamlit .ag-header,
+.ag-theme-streamlit .ag-paging-panel {
+  background: transparent !important;
+}
+div[data-testid="stAppViewContainer"] .ag-theme-streamlit .ag-root-wrapper {
+  background: var(--glass) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+}
+.ag-theme-streamlit .ag-floating-filter,
+.ag-theme-streamlit .ag-header-row-floating-filter {
+  background: rgba(241,245,249,0.5) !important;
 }
 
 /* Hero Banner */
