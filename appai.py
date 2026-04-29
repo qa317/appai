@@ -535,8 +535,15 @@ if st.session_state.logged_in:
         range=[project_data[[ps_c for _, ps_c, _, _, _ in PHASES if ps_c in project_data.columns]].min().min(),
                max_date + pd.Timedelta(days=20)],
         showgrid=True, gridcolor="rgba(0,0,0,0.03)", zeroline=False)
+
+    ROW_H = 38   # px per horizontal line — tweak 32–45 to taste
+    BASE  = 90   # top + bottom margin + x-axis room
+    n_rows = max(1, len(y_vals))
+    fig_height = min(1600, max(160, BASE + ROW_H * n_rows))
+
     fig.update_layout(
-        height=max(380, 20 * len(y_vals)), margin=dict(l=95, r=80, t=20, b=10),
+        height=fig_height,
+        margin=dict(l=95, r=80, t=20, b=10),
         plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
         hovermode="closest", font=dict(family="Outfit, sans-serif"))
     st.plotly_chart(fig, use_container_width=True)
