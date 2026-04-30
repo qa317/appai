@@ -1304,9 +1304,9 @@ if st.session_state.logged_in:
                 </div>{"<div class='upd-sep'></div>" if i < len(days)-1 else ""}""", unsafe_allow_html=True)
 
     # ── SURVEYOR REPORT (ECD / EFSP) ──
-    if main_project in ['ECD', 'EFSP','EMERGe']:
+    if main_project in ['ECD', 'EFSP','EMERGe','HER']:
         sr = st.button("Generate Surveyor Performance Report", key="create_report_btn", type="primary")
-        if sr and main_project in ['ECD', 'EFSP']:
+        if sr:# and main_project in ['ECD', 'EFSP']:
             qalog2 = pd.merge(tall, qalog[['Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved', 'KEY_Unique']], on='KEY_Unique', how='left')
             qalog2['severity'] = qalog2['QA_Status'].map({'Rejected': 'High', 'Approved': 'Low', 'Pending': 'Medium'})
             issues = qalog2[['Site_Visit_ID', 'Province', 'Village', 'severity', 'QA_Status', 'Surveyor_Name', 'KEY', 'Date', 'Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved']].copy()
