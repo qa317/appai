@@ -1231,37 +1231,36 @@ if st.session_state.logged_in:
         # ── SUMMARY GENERATION ──
         st.markdown('<div class="section-label">Summary Generation</div>', unsafe_allow_html=True)
         st.info('Summaries include both "Complete" and "Incomplete" submissions by default. Select only "Complete" for accurate sample tracking.')
-        col3, col4 = st.columns(2)
-        with col3:
-            with st.container(border=True):
-                disag2 = st.multiselect('Sample Summary', tari.columns.tolist(), def_var0,
-                                        help='Create summaries based on selected columns, for download, please right-click and export!')
-                if disag2:
-                    st.markdown("**DC Progress Summary**")
-                    total_target_s  = tari.fillna('NAN').groupby(disag2).size()
-                    received_data_s = tari.fillna('NAN')[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
-                    summary = pd.DataFrame({
-                        'Total_Target': total_target_s,
-                        'Received_Data': received_data_s
-                    }).fillna(0).astype(int)
-                    summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
-                    summary['Completed ✅'] = (summary['Received_Data'] == summary['Total_Target'])\
-                                              .apply(lambda x: '✅' if x else '❌')
-        
-                    excel_like_table(summary, key="sample_summary_grid", height=380)
 
-        with col4:
-            with st.container(border=True):
-                disag = st.multiselect('Dataset Summary', tall.columns.tolist(), default=def_var1, help='Create summaries based on selected columns.')
-                if disag:
-                    st.markdown("**Summary**")
-                    if len(disag) == 1:
-                        disag_t = tall.groupby(disag).size().reset_index().rename(columns={0: 'N'})
-                        disag_t.loc[len(disag_t)] = ['Total', disag_t['N'].sum()]
-                    else:
-                        disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
-                        disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
-                    st.dataframe(disag_t)
+        with st.container(border=True):
+            disag2 = st.multiselect('Sample Summary', tari.columns.tolist(), def_var0,
+                                    help='Create summaries based on selected columns, for download, please right-click and export!')
+            if disag2:
+                st.markdown("**DC Progress Summary**")
+                total_target_s  = tari.fillna('NAN').groupby(disag2).size()
+                received_data_s = tari.fillna('NAN')[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
+                summary = pd.DataFrame({
+                    'Total_Target': total_target_s,
+                    'Received_Data': received_data_s
+                }).fillna(0).astype(int)
+                summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
+                summary['Completed ✅'] = (summary['Received_Data'] == summary['Total_Target'])\
+                                          .apply(lambda x: '✅' if x else '❌')
+    
+                excel_like_table(summary, key="sample_summary_grid", height=380)
+
+
+        with st.container(border=True):
+            disag = st.multiselect('Dataset Summary', tall.columns.tolist(), default=def_var1, help='Create summaries based on selected columns.')
+            if disag:
+                st.markdown("**Summary**")
+                if len(disag) == 1:
+                    disag_t = tall.groupby(disag).size().reset_index().rename(columns={0: 'N'})
+                    disag_t.loc[len(disag_t)] = ['Total', disag_t['N'].sum()]
+                else:
+                    disag_t = tall.groupby(disag).size().unstack(disag[-1], fill_value=0).reset_index()
+                    disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
+                st.dataframe(disag_t)
         if 'tall2' in locals():
           disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,help='For phone surveys where multiple attempts to reach respondents may be necessary.')
           if disag_raw:
