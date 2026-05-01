@@ -1245,15 +1245,15 @@ if st.session_state.logged_in:
                 summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
                 summary['Completed ✅'] = (summary['Received_Data'] == summary['Total_Target'])\
                                           .apply(lambda x: '✅' if x else '❌')
-                col1, col2 = st.columns([4, 1])
+                col1, col2 = st.columns([9, 1])
                 with col1:
                     st.markdown("**DC Progress Summary**")
                 with col2:
                     csv = summary.to_csv(index=True).encode('utf-8')
                     st.download_button(
-                        label="⬇️ Download",
+                        label="⬇️.csv",
                         data=csv,
-                        file_name="dc_progress_summary.csv",
+                        file_name="df_summary.csv",
                         mime="text/csv",
                         key="download_summary"
                     )
