@@ -460,7 +460,7 @@ if st.session_state.logged_in:
             allow_unsafe_jscode=True,
             fit_columns_on_grid_load=True,
             custom_css=custom_css,
-            enable_enterprise_modules=True,
+            enable_enterprise_modules=False,
             key=key,
         )
     def delay_days(plan_end, actual_end):
@@ -1236,13 +1236,13 @@ if st.session_state.logged_in:
             disag2 = st.multiselect('Sample Summary', tari.columns.tolist(), def_var0,
                                     help='Create summaries based on selected columns, for download, please right-click and export!')
             if disag2:
-                st.markdown("**DC Progress Summary**")
                 total_target_s  = tari.fillna('NAN').groupby(disag2).size()
                 received_data_s = tari.fillna('NAN')[tari['QA_Status'].isin(qastatus)].groupby(disag2).size()
                 summary = pd.DataFrame({
                     'Total_Target': total_target_s,
                     'Received_Data': received_data_s
                 }).fillna(0).astype(int)
+                st.markdown("**DC Progress Summary**")
                 summary['Remaining'] = summary['Total_Target'] - summary['Received_Data']
                 summary['Completed ✅'] = (summary['Received_Data'] == summary['Total_Target'])\
                                           .apply(lambda x: '✅' if x else '❌')
