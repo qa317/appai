@@ -766,7 +766,8 @@ if st.session_state.logged_in:
         received = tari[tari.QA_Status.notna()].groupby('Tool').size()
         approved = tari[tari.QA_Status == 'Approved'].groupby('Tool').size()
         rejected = tari[tari.QA_Status == 'Rejected'].groupby('Tool').size()
-        awaiting = tari[tari.QA_Status.isin(["Not QA'ed Yet", 'Pending'])].groupby('Tool').size()
+        grpby = ['Tool', 'Quarter'] if main_project == 'HER' else ['Tool']
+        awaiting = tari[tari.QA_Status.isin(["Not QA'ed Yet", 'Pending'])].groupby(grpby).size()
         data_metrics = pd.DataFrame({'Target': target, 'Received data': received, 'Approved data': approved,
             'Rejected data': rejected, 'Awaiting review': awaiting}).fillna(0).astype(int).reset_index()
         if len(data_metrics) > 1:
