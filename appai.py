@@ -1283,7 +1283,7 @@ if st.session_state.logged_in:
                   data=csv,
                   file_name="df_summary.csv",
                   mime="text/csv",
-                  key="download_summary"
+                  key="download_summary2"
               )
           
           if disag_raw:
