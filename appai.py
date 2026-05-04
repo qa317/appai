@@ -1281,7 +1281,7 @@ if st.session_state.logged_in:
               st.download_button(
                   label="⬇️all_tryouts.csv",
                   data=csv2,
-                  file_name="df_summary.csv",
+                  file_name="all_tryouts.csv",
                   mime="text/csv",
                   key="download_summary2"
               )
