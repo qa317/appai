@@ -1279,8 +1279,8 @@ if st.session_state.logged_in:
           with colim2:
               csv2 = tall2.to_csv(index=True).encode('utf-8')
               st.download_button(
-                  label="⬇️.csv",
-                  data=csv,
+                  label="⬇️all_tryouts.csv",
+                  data=csv2,
                   file_name="df_summary.csv",
                   mime="text/csv",
                   key="download_summary2"
