@@ -1273,7 +1273,19 @@ if st.session_state.logged_in:
                     disag_t.loc['Total'] = disag_t.sum(numeric_only=True)
                 st.dataframe(disag_t)
         if 'tall2' in locals():
-          disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,help='For phone surveys where multiple attempts to reach respondents may be necessary.')
+          colim1, colim2 = st.columns([9, 1])
+          with colim1:
+              disag_raw = st.multiselect('Tryouts Summary (Phone Surveys)', tall2.columns.tolist(), def_var2,help='For phone surveys where multiple attempts to reach respondents may be necessary.')
+          with colim2:
+              csv2 = tall2.to_csv(index=True).encode('utf-8')
+              st.download_button(
+                  label="⬇️.csv",
+                  data=csv,
+                  file_name="df_summary.csv",
+                  mime="text/csv",
+                  key="download_summary"
+              )
+          
           if disag_raw:
               st.markdown("**Raw Data (Tryouts)**")
               if len(disag_raw) == 1:
