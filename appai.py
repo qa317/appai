@@ -556,7 +556,7 @@ if st.session_state.logged_in:
         selected_project = st.selectbox("Sub-project", project_names, key="selectbox_2")
 
     project_data = df[df['Project Name'] == selected_project].reset_index()
-    QA_records_link = project_data['QA-Notes link'][0]
+    QA_records_link = project_data['QA Plan & Rejection Criteria'][0]
     proj_completed = project_data['Completed'][0]
     project_data_tools = df_tools[df_tools['Project Name'] == selected_project].reset_index()
     tool_col_map = project_data_tools.set_index('Tool')['main_cols'].to_dict()
@@ -631,8 +631,8 @@ if st.session_state.logged_in:
 
     # ── PROJECT LINKS ──
     st.markdown('<div class="section-label">Project Links</div>', unsafe_allow_html=True)
-    links_row = project_data[['Tool link', 'XLSForm link', 'QA-Notes link', 'Tracker link', 'DC Tracker', 'Document folder link']].iloc[0]
-    link_labels = {'Tool link': ('🛠️', 'Tool'), 'XLSForm link': ('📋', 'XLSForm'), 'QA-Notes link': ('📊', 'QA Notes'),
+    links_row = project_data[['Tool link', 'XLSForm link', 'QA Plan & Rejection Criteria', 'Tracker link', 'DC Tracker', 'Document folder link']].iloc[0]
+    link_labels = {'Tool link': ('🛠️', 'Tool'), 'XLSForm link': ('📋', 'XLSForm'), 'QA Plan & Rejection Criteria': ('📊', 'QA Plan & Rejection Criteria'),
         'Tracker link': ('📈', 'QA Tracker'), 'DC Tracker': ('📉', 'DC Tracker'), 'Document folder link': ('📁', 'Docs')}
     cards_html = '<div class="links-grid">'
     for col_name, (icon, label) in link_labels.items():
