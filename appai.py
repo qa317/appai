@@ -1224,6 +1224,10 @@ if st.session_state.logged_in:
             tari_csv = convert_df_to_csv(tari)
             st.download_button(label="⬇ Download Target Data", data=tari_csv, file_name='Sample_Tracking.csv', mime='text/csv')
 
+        if st.session_state.username=='admin':
+          ext=t[(~t.V_ID.isin(tari.V_ID))]
+          st.dataframe(ext)
+
         j = project_data['notes'][0]
         if j != "-":
             st.markdown(eval(j[1:-1]), unsafe_allow_html=True)
