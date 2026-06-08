@@ -550,7 +550,7 @@ if st.session_state.logged_in:
     st.plotly_chart(fig, use_container_width=True)
 
     # ── SUB-PROJECT ──
-    st.markdown('<div class="section-label">Round / Sub-Projectt:</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">Round / Sub-Project</div>', unsafe_allow_html=True)
     collll1, collll2, collll3 = st.columns([1, 1, 1])
     with collll1:
         selected_project = st.selectbox("Sub-project", project_names, key="selectbox_2")
@@ -1332,7 +1332,7 @@ if st.session_state.logged_in:
 
     # ── SURVEYOR REPORT (ECD / EFSP) ──
     if main_project in ['ECD', 'EFSP','EMERGe','HER']:
-        sr = st.button("Generate Surveyor Performance Reportt:", key="create_report_btn", type="primary")
+        sr = st.button("Generate Surveyor Performance Report:", key="create_report_btn", type="primary")
         if sr:# and main_project in ['ECD', 'EFSP']:
             qalog2 = pd.merge(tall, qalog[['Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved', 'KEY_Unique']], on='KEY_Unique', how='left')
             qalog2['severity'] = qalog2['QA_Status'].map({'Rejected': 'High', 'Approved': 'Low', 'Pending': 'Medium'})
