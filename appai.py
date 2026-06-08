@@ -1332,7 +1332,7 @@ if st.session_state.logged_in:
 
     # ── SURVEYOR REPORT (ECD / EFSP) ──
     if main_project in ['ECD', 'EFSP','EMERGe','HER']:
-        sr = st.button("Generate Surveyor Performance Report", key="create_report_btn", type="primary")
+        sr = st.button("Generate Surveyor Performance Reportt:", key="create_report_btn", type="primary")
         if sr:# and main_project in ['ECD', 'EFSP']:
             qalog2 = pd.merge(tall, qalog[['Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved', 'KEY_Unique']], on='KEY_Unique', how='left')
             qalog2['severity'] = qalog2['QA_Status'].map({'Rejected': 'High', 'Approved': 'Low', 'Pending': 'Medium'})
@@ -1351,7 +1351,6 @@ if st.session_state.logged_in:
                 issues[c] = issues[c].fillna("")
             issues['Location'] = issues['Province'] + "-" + issues['Village']
             qalog2['Date'] = pd.to_datetime(qalog2['Date'], errors='coerce')
-            st.dataframe(qalog2)
             chart_source = qalog2[['Date', 'QA_Status', 'Surveyor_Name', 'Issue_Type', 'Issue_Description', 'surveyor_response', 'KEY', 'Site_Visit_ID', 'Province', 'Village', 'issue_resolved']].copy()
             chart_source['Date'] = chart_source['Date'].dt.strftime('%Y-%m-%d')
             chart_source = chart_source.dropna(subset=['Date'])
