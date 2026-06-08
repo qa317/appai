@@ -1336,7 +1336,6 @@ if st.session_state.logged_in:
         if sr:# and main_project in ['ECD', 'EFSP']:
             qalog2 = pd.merge(tall, qalog[['Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved', 'KEY_Unique']], on='KEY_Unique', how='left')
             qalog2['severity'] = qalog2['QA_Status'].map({'Rejected': 'High', 'Approved': 'Low', 'Pending': 'Medium'})
-            st.dataframe(qalog2)
             issues = qalog2[['Site_Visit_ID', 'Province', 'Village', 'severity', 'QA_Status', 'Surveyor_Name', 'KEY', 'Date', 'Issue_Type', 'Issue_Description', 'surveyor_notified', 'surveyor_response', 'issue_resolved']].copy()
             summary_sr = (qalog2.groupby('Surveyor_Name').agg(total_submissions=('Surveyor_Name', 'size'),
                 rejected_count=('QA_Status', lambda x: (x == 'Rejected').sum()),
