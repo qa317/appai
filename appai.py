@@ -550,7 +550,7 @@ if st.session_state.logged_in:
     st.plotly_chart(fig, use_container_width=True)
 
     # ── SUB-PROJECT ──
-    st.markdown('<div class="section-label">Round / Sub-Project</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">Round / Sub-Projectt:</div>', unsafe_allow_html=True)
     collll1, collll2, collll3 = st.columns([1, 1, 1])
     with collll1:
         selected_project = st.selectbox("Sub-project", project_names, key="selectbox_2")
