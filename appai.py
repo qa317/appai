@@ -1351,6 +1351,7 @@ if st.session_state.logged_in:
                 issues[c] = issues[c].fillna("")
             issues['Location'] = issues['Province'] + "-" + issues['Village']
             qalog2['Date'] = pd.to_datetime(qalog2['Date'], errors='coerce')
+            st.dataframe(qalog2)
             chart_source = qalog2[['Date', 'QA_Status', 'Surveyor_Name', 'Issue_Type', 'Issue_Description', 'surveyor_response', 'KEY', 'Site_Visit_ID', 'Province', 'Village', 'issue_resolved']].copy()
             chart_source['Date'] = chart_source['Date'].dt.strftime('%Y-%m-%d')
             chart_source = chart_source.dropna(subset=['Date'])
