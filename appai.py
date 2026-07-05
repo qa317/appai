@@ -678,7 +678,7 @@ if st.session_state.logged_in:
             for tool, cols in tool_col_map.items():
                 group_cols = [c for c in cols.split('-') if c != 'occurance']
                 mask = t['Tool'] == tool
-                st.dataframe(t)
+                #st.dataframe(t)
                 t.loc[mask, 'occurance'] = t.loc[mask].groupby(group_cols).cumcount() + 1
             t['occurance'] = t['occurance'].fillna(9999).astype(int)
             t['V_ID'] = t.apply(compute_vid, axis=1)
